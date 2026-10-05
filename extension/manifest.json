@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Askep: кодування діагнозів (реабілітація)",
+  "version": "1.0.0",
+  "description": "Підбір основного та супутніх діагнозів за формулами кодування НСЗУ і заповнення полів «Код діагнозу» на сторінці.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Кодування діагнозів",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "permissions": ["activeTab", "scripting", "storage"]
+}

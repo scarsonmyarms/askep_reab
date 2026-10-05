@@ -1,0 +1,73 @@
+:root {
+  --teal: #26c6ca;        /* як шапка блоку «Діагноз №1» в Askep */
+  --teal-dark: #128f93;
+  --ink: #1f2a30;
+  --muted: #6b7a82;
+  --line: #d5dde1;
+  --ok: #1e7b34;    --ok-bg: #e3f4e7;
+  --warn: #8a5a00;  --warn-bg: #fff3d1;
+  --fail: #b3261e;  --fail-bg: #fde4e2;
+  --info: #1f5fa8;  --info-bg: #e5eefa;
+}
+* { box-sizing: border-box; }
+body {
+  width: 480px; margin: 0;
+  font: 13px/1.45 "Segoe UI", Roboto, system-ui, sans-serif; color: var(--ink);
+}
+header { background: var(--teal); color: #fff; padding: 10px 14px; display: flex; align-items: baseline; gap: 10px; }
+header h1 { font-size: 15px; font-weight: 600; margin: 0; }
+header .muted { color: #e6fbfb; font-size: 11px; margin-left: auto; }
+main { padding: 10px 14px 4px; }
+.muted { color: var(--muted); }
+
+.row.period { display: flex; border: 1px solid var(--teal); border-radius: 6px; overflow: hidden; margin-bottom: 6px; }
+.row.period label { flex: 1; text-align: center; padding: 5px 0; cursor: pointer; }
+.row.period input { position: absolute; opacity: 0; }
+.row.period label:has(input:checked) { background: var(--teal); color: #fff; font-weight: 600; }
+.row.period label:has(input:focus-visible) { outline: 2px solid var(--teal-dark); outline-offset: -2px; }
+.check { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+
+.field { margin-bottom: 6px; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; }
+.field-head label { font-weight: 600; }
+.main-field .field-head label { font-size: 13.5px; }
+.field-head .tag { font-weight: 400; color: var(--teal-dark); font-size: 11px; margin-left: 4px; }
+.count { color: var(--muted); font-size: 11px; }
+.input-row { display: flex; gap: 4px; }
+.input-row input {
+  flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font: inherit;
+}
+.input-row input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 2px #26c6ca33; }
+.input-row input.unknown { border-color: #e0a800; }
+.clear { border: 1px solid var(--line); background: #fff; border-radius: 4px; width: 28px; cursor: pointer; color: var(--muted); }
+.clear:hover { color: var(--fail); border-color: var(--fail); }
+.hint { font-size: 11.5px; margin-top: 2px; }
+
+.summary { margin: 8px 0 4px; padding: 8px 10px; border-radius: 6px; font-weight: 600; border-left: 5px solid; }
+.summary.ok   { background: var(--ok-bg);   color: var(--ok);   border-color: var(--ok); }
+.summary.warn { background: var(--warn-bg); color: var(--warn); border-color: #e0a800; }
+.summary.fail { background: var(--fail-bg); color: var(--fail); border-color: var(--fail); }
+
+details { margin: 4px 0; }
+details > summary { cursor: pointer; color: var(--teal-dark); font-size: 12px; }
+#report { max-height: 220px; overflow: auto; font-size: 12px; padding: 4px 0; }
+#report h3 { font-size: 12px; margin: 8px 0 2px; }
+#report p { margin: 1px 0 1px 10px; }
+#report .sub { margin-left: 10px; font-weight: 600; margin-top: 4px; }
+#report .sub + p, #report .sub ~ p.in { margin-left: 22px; }
+.l-ok { color: var(--ok); } .l-warn { color: var(--warn); } .l-fail { color: var(--fail); } .l-info { color: var(--info); }
+
+footer { border-top: 1px solid var(--line); padding: 8px 14px 10px; }
+.actions { display: flex; gap: 6px; }
+button { font: inherit; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--teal-dark); outline-offset: 1px; }
+button.primary { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; flex: 1; }
+button.primary:hover:not(:disabled) { background: var(--teal-dark); }
+button.primary.danger { background: var(--fail); border-color: var(--fail); }
+button:disabled { opacity: .5; cursor: default; }
+#fill-result { font-size: 12px; margin-top: 6px; }
+#fill-result p { margin: 2px 0; }
+.settings { display: grid; gap: 6px; padding-top: 6px; }
+.settings label { display: grid; grid-template-columns: 190px 1fr; align-items: center; font-size: 12px; color: var(--muted); }
+.settings input { padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; font: inherit; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

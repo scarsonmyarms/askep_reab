@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Кодування діагнозів</h1>
+    <span id="source" class="muted"></span>
+  </header>
+
+  <main>
+    <div class="row period" role="radiogroup" aria-label="Реабілітаційний період">
+      <label><input type="radio" name="period" value="Післягострий" checked> Післягострий</label>
+      <label><input type="radio" name="period" value="Довготривалий"> Довготривалий</label>
+    </div>
+    <label class="check"><input type="checkbox" id="st"> Коди S/T у формулах T90–T95 обов'язкові</label>
+
+    <section class="field main-field">
+      <div class="field-head"><label for="main">Основний діагноз</label><span class="count" id="main-count"></span></div>
+      <div class="input-row">
+        <input id="main" list="dl-main" placeholder="Код або частина назви" autocomplete="off" spellcheck="false">
+        <button class="clear" data-for="main" title="Очистити" aria-label="Очистити основний діагноз">✕</button>
+      </div>
+      <datalist id="dl-main"></datalist>
+    </section>
+
+    <section id="slots"></section>
+
+    <div id="summary" class="summary" hidden></div>
+    <details id="details">
+      <summary>Деталі перевірки</summary>
+      <div id="report"></div>
+    </details>
+  </main>
+
+  <footer>
+    <div class="actions">
+      <button id="fill" class="primary" disabled>Заповнити на сторінці</button>
+      <button id="probe" title="Підсвітити поля «Код діагнозу», які знайде розширення">Знайти поля</button>
+      <button id="reset">Очистити все</button>
+    </div>
+    <div id="fill-result" aria-live="polite"></div>
+    <details>
+      <summary>Налаштування заповнення</summary>
+      <div class="settings">
+        <label>Підпис поля <input id="opt-label" value="Код діагнозу"></label>
+        <label>id поля (необов'язково) <input id="opt-id" placeholder="напр. input-297"></label>
+        <label>Очікування списку, с <input id="opt-timeout" type="number" min="1" max="30" value="6"></label>
+      </div>
+    </details>
+  </footer>
+
+  <script src="logic.js"></script>
+  <script src="fill.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
