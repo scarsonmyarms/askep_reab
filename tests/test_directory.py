@@ -31,7 +31,8 @@ def test_code_and_mark_from_name(d):
 def test_categories(d):
     assert d.find("G93.7").cats == {"ПП", "ФО"}
     assert d.find("G93.7").cats_text == "ПП, ФО"
-    assert d.find("Z50.0").cats == {"СФЗ"}
+    assert d.find("Z50.0").cats == {"Z"}          # Z50.x — Діагноз_Z, не СФЗ
+    assert d.find("Z74.1").cats == {"СФЗ"}
 
 
 class TestMainRules:

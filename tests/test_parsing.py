@@ -19,14 +19,14 @@ class TestGroups:
         g, _ = kinds_tokens(f"плюс код {PP} плюс код(и) {FO}")
         assert g == [("cat", ["ПП"]), ("cat", ["ФО"])]
 
-    def test_ta_abo_is_and(self):
-        """«та/або» = «та»: кожна категорія — окрема обов'язкова група."""
+    def test_ta_abo_is_or(self):
+        """«та/або» = АБО (як у нових файлах: «Діагноз_ПП AND (Діагноз_ФО OR Діагноз_СП)»)."""
         g, _ = kinds_tokens(f"плюс код {PP} плюс код(и) {FO} та/або код(и) {SP}")
-        assert g == [("cat", ["ПП"]), ("cat", ["ФО"]), ("cat", ["СП"])]
+        assert g == [("cat", ["ПП"]), ("cat", ["ФО", "СП"])]
 
     def test_abo_is_or(self):
         g, _ = kinds_tokens(f"плюс код {PP} та/або код(и) {FO} та/або код(и) {SP} або код(и) {C_}")
-        assert g == [("cat", ["ПП"]), ("cat", ["ФО"]), ("cat", ["СП", "С"])]
+        assert g == [("cat", ["ПП", "ФО", "СП", "С"])]
 
     def test_ta_kod_splits(self):
         g, _ = kinds_tokens(f"плюс код {PP} гострого стану та код(и) {FO}")
@@ -55,16 +55,22 @@ class TestCodeGroups:
         assert g == [("code", ["S06", "T90.5"]), ("cat", ["ФО"])]
 
     def test_ranges_and_lists(self):
+        """Кома — АБО, «та» в переліку кодів — окрема обов'язкова група (як у нових файлах для T90.8)."""
         g, _ = kinds_tokens(f"плюс код S03.-, S07-S08 та S09.0-S09.2 плюс код(и) {FO}")
-        assert g[0] == ("code", ["S03", "S07", "S08", "S09.0", "S09.1", "S09.2"])
+        assert g[:2] == [("code", ["S03", "S07", "S08"]), ("code", ["S09.0", "S09.1", "S09.2"])]
 
     def test_range_with_trailing_dash_and_newline(self):
         g, _ = kinds_tokens("плюс код S14.0-S14.1-, S24.2-\nS24.4, T09.0- та T11.2.-")
-        assert g[0][1] == ["S14.0", "S14.1", "S24.2", "S24.3", "S24.4", "T09.0", "T11.2"]
+        assert g == [("code", ["S14.0", "S14.1", "S24.2", "S24.3", "S24.4", "T09.0"]), ("code", ["T11.2"])]
 
     def test_no_space_after_kod(self):
         g, _ = kinds_tokens(f"плюс кодS76.-, S86.- та T13.5 плюс код(и) {FO}")
-        assert g[0][1] == ["S76", "S86", "T13.5"]
+        assert g[:2] == [("code", ["S76", "S86"]), ("code", ["T13.5"])]
+
+    def test_t92_3_like_new_file(self):
+        """T92.3 у новому файлі: (S43 | S53 | S63) AND T11.2 AND Діагноз_ФО."""
+        g, _ = kinds_tokens(f"плюс код S43.-, S53.-, S63.- та T11.2.- плюс код(и) {FO}")
+        assert g == [("code", ["S43", "S53", "S63"]), ("code", ["T11.2"]), ("cat", ["ФО"])]
 
 
 class TestExpand:

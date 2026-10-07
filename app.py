@@ -14,9 +14,10 @@ import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from coding_rules import (FAIL, INFO, OK, PERIOD_LONG, PERIOD_POST, WARN, Directory, validate)
+from coding_rules import (FAIL, INFO, OK, PERIOD_LONG, PERIOD_POST, SETTING_INPATIENT, SETTING_OUTPATIENT,
+                          WARN, Directory, plan_slots,
+                          slot_candidates, slot_fits, validate)
 
-N_SLOTS = 8
 COLORS = {OK: "#1e7b34", WARN: "#9a6700", FAIL: "#b3261e", INFO: "#1f5fa8"}
 
 
@@ -62,6 +63,16 @@ class App(tk.Tk):
         self.file_lbl = ttk.Label(top, text="Довідник не завантажено", foreground="#666")
         self.file_lbl.pack(side="left", padx=10)
 
+        sett = ttk.Frame(self, padding=(8, 0, 8, 4))
+        sett.pack(fill="x")
+        ttk.Label(sett, text="Умови:", font=("", 10, "bold")).pack(side="left")
+        self.setting = tk.StringVar(value=SETTING_INPATIENT)
+        for s in (SETTING_INPATIENT, SETTING_OUTPATIENT):
+            ttk.Radiobutton(sett, text=s, value=s, variable=self.setting, command=self.refresh).pack(side="left", padx=4)
+        self.sr_record = tk.BooleanVar(value=False)
+        self.sr_chk = ttk.Checkbutton(sett, text="Є запис СР1/СР2/СР3 за останні 3 місяці (послуга АР1)",
+                                      variable=self.sr_record, command=self.refresh)
+
         opts = ttk.Frame(self, padding=(8, 0))
         opts.pack(fill="x")
         ttk.Label(opts, text="Реабілітаційний період:").pack(side="left")
@@ -81,22 +92,21 @@ class App(tk.Tk):
         self.main_cnt = ttk.Label(form, width=14, foreground="#666")
         self.main_cnt.grid(row=0, column=2, sticky="w", padx=4)
 
+        # поля супутніх будуються динамічно за ролями (див. plan_slots)
+        self.slots_frame = ttk.Frame(form)
+        self.slots_frame.grid(row=1, column=0, columnspan=4, sticky="ew")
+        self.slots_frame.columnconfigure(1, weight=1)
+        self.values: dict[str, str] = {}
+        self.plan = []
+        self._plan_keys = None
         self.slot_cbs: list[SearchCombobox] = []
         self.slot_cnts: list[ttk.Label] = []
-        for i in range(N_SLOTS):
-            lbl = f"Супутній {i + 1}:" + (" (з формулою)" if i == 0 else "")
-            ttk.Label(form, text=lbl).grid(row=i + 1, column=0, sticky="w", pady=2)
-            cb = SearchCombobox(form, self.refresh, width=110)
-            cb.grid(row=i + 1, column=1, sticky="ew", pady=2)
-            cnt = ttk.Label(form, width=14, foreground="#666")
-            cnt.grid(row=i + 1, column=2, sticky="w", padx=4)
-            ttk.Button(form, text="✕", width=3, command=lambda c=cb: (c.set(""), self.refresh())).grid(row=i + 1, column=3)
-            self.slot_cbs.append(cb)
-            self.slot_cnts.append(cnt)
+        self.slot_hints: list[ttk.Label] = []
+        self.slot_titles: list[ttk.Label] = []
         ttk.Label(form, foreground="#666", wraplength=1050, justify="left",
-                  text="Поле 1 — за формулою основного; поля 2–8 — за формулами основного та супутнього 1. "
-                       "Можна ввести діагноз поза списком (коморбідний стан) — він не враховується у формулах.") \
-            .grid(row=N_SLOTS + 1, column=0, columnspan=4, sticky="w", pady=(4, 0))
+                  text="Поля супутніх: спершу — за формулою основного, далі — пари †/*, за формулою супутнього 1, "
+                       "потім необов'язкові. Можна ввести діагноз поза списком (коморбідний стан).") \
+            .grid(row=2, column=0, columnspan=4, sticky="w", pady=(4, 0))
 
         btns = ttk.Frame(self, padding=(8, 0))
         btns.pack(fill="x")
@@ -131,14 +141,46 @@ class App(tk.Tk):
         except Exception as e:  # noqa: BLE001
             messagebox.showerror("Помилка", f"Не вдалося прочитати довідник:\n{e}")
             return
-        self.file_lbl.config(text=f"{path}  —  {len(self.directory.items)} діагнозів", foreground="#000")
+        src = self.directory.sources
+        extra = f" + {len(src) - 1} файли НСЗУ" if len(src) > 1 else " (файлів НСЗУ поруч не знайдено)"
+        self.file_lbl.config(text=f"{path}  —  {len(self.directory.items)} діагнозів{extra}", foreground="#000")
         self.refresh()
 
     def clear_all(self):
         self.main_cb.set("")
-        for cb in self.slot_cbs:
-            cb.set("")
+        self.values = {}
         self.refresh()
+
+    ROLE_TAG = {"main": "формула основного", "pair": "пара †/*", "comp1": "формула супутнього 1",
+                "free": "необов'язково"}
+    ROLE_COLOR = {"main": "#128f93", "pair": "#8e44ad", "comp1": "#8a5a00", "free": "#666"}
+
+    def _collect(self):
+        """Значення полів → self.values (за ключами поточного плану)."""
+        for s, cb in zip(self.plan, self.slot_cbs):
+            self.values[s.key] = cb.get()
+
+    def _build_slots(self):
+        for w in self.slots_frame.winfo_children():
+            w.destroy()
+        self.slot_cbs, self.slot_cnts, self.slot_hints, self.slot_titles = [], [], [], []
+        for i, s in enumerate(self.plan):
+            r = i * 2
+            title = ttk.Label(self.slots_frame, text="")
+            title.grid(row=r, column=0, sticky="nw", pady=(4, 0))
+            cb = SearchCombobox(self.slots_frame, self.refresh, width=110)
+            cb.grid(row=r, column=1, sticky="ew", pady=(4, 0))
+            cnt = ttk.Label(self.slots_frame, width=14, foreground="#666")
+            cnt.grid(row=r, column=2, sticky="w", padx=4)
+            ttk.Button(self.slots_frame, text="✕", width=3,
+                       command=lambda c=cb: (c.set(""), self.refresh())).grid(row=r, column=3)
+            hint = ttk.Label(self.slots_frame, text="", foreground="#666")
+            hint.grid(row=r + 1, column=1, columnspan=3, sticky="w")
+            cb.set(s.value)
+            self.slot_cbs.append(cb)
+            self.slot_cnts.append(cnt)
+            self.slot_hints.append(hint)
+            self.slot_titles.append(title)
 
     def copy_report(self):
         self.clipboard_clear()
@@ -155,14 +197,38 @@ class App(tk.Tk):
             self.main_cnt.config(text=f"{len(mains)} у списку")
 
             main = d.find(self.main_cb.get())
-            selected = [d.find(cb.get()) if cb.get().strip() else None for cb in self.slot_cbs]
-            for i, cb in enumerate(self.slot_cbs):
-                cand = d.companion_candidates(main, i, selected)
+            self._collect()
+            self.plan = plan_slots(d, main, self.values)
+            keys = [s.key for s in self.plan]
+            if keys != self._plan_keys:
+                self._build_slots()
+                self._plan_keys = keys
+            for i, (s, cb) in enumerate(zip(self.plan, self.slot_cbs)):
+                cand = slot_candidates(d, main, self.plan, i)
                 cb.set_values([x.name for x in cand])
-                self.slot_cnts[i].config(text=f"{len(cand)} у списку" if main else "")
+                self.slot_cnts[i].config(text=f"{len(cand)} у списку")
+                self.slot_titles[i].config(text=f"Супутній {i + 1} ({self.ROLE_TAG[s.role]}):",
+                                           foreground=self.ROLE_COLOR[s.role])
+                v = s.value.strip()
+                if v and s.diag is not None and s.diag.source == "введено":
+                    hint, col = "Немає в довіднику — враховано лише за кодом", "#666"
+                elif v and s.diag is None:
+                    hint, col = "Немає в довіднику — коморбідний стан", "#666"
+                elif slot_fits(s) is False:
+                    hint, col = "⚠ Діагноз не відповідає ролі цього поля", COLORS[WARN]
+                else:
+                    hint, col = ("" if s.role == "free" else s.label), "#666"
+                self.slot_hints[i].config(text=hint, foreground=col)
 
-            texts = [cb.get() for cb in self.slot_cbs]
-            self._render(validate(d, self.period.get(), self.main_cb.get(), texts, self.st_required.get()))
+            texts = [s.value for s in self.plan]
+            out = self.setting.get() == SETTING_OUTPATIENT
+            if out:
+                self.sr_chk.pack(side="left", padx=20)
+            else:
+                self.sr_chk.pack_forget()
+            self.title("Кодування діагнозів — " + ("амбулаторна" if out else "стаціонарна") + " реабілітація")
+            self._render(validate(d, self.period.get(), self.main_cb.get(), texts, self.st_required.get(),
+                                  setting=self.setting.get(), sr_record=self.sr_record.get()))
         finally:
             self._busy = False
 
@@ -186,8 +252,9 @@ class App(tk.Tk):
                 line(l)
         if rep.companions:
             head("\nСУПУТНІ")
-            for i, (name, ls) in enumerate(rep.companions, 1):
-                self.out.insert("end", f"  {i}. {name}\n")
+            nums = [i + 1 for i, s in enumerate(self.plan) if s.value.strip()]
+            for i, (name, ls) in enumerate(rep.companions):
+                self.out.insert("end", f"  Супутній {nums[i] if i < len(nums) else i + 1}. {name}\n")
                 for l in ls:
                     line(l, "      ")
         head("\nНЕСУМІСНІ ПОЄДНАННЯ")
@@ -197,6 +264,10 @@ class App(tk.Tk):
         else:
             self.out.insert("end", f"  {OK} ", OK)
             self.out.insert("end", "Не виявлено\n")
+        if rep.services:
+            head("\nПОСЛУГИ АМБУЛАТОРНОЇ РЕАБІЛІТАЦІЇ (за діагнозами)")
+            for l in rep.services:
+                line(l)
         self.out.config(state="disabled")
         bg = {OK: "#c6efce", WARN: "#ffeb9c", FAIL: "#ffc7ce", INFO: "#ddebf7"}[rep.summary.level]
         self.summary.config(text=f"{rep.summary.level}  {rep.summary.text}", bg=bg)

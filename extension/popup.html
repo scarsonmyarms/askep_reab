@@ -11,11 +11,16 @@
   </header>
 
   <main>
+    <div class="row period setting" role="radiogroup" aria-label="Умови надання реабілітації">
+      <label><input type="radio" name="setting" value="Стаціонар" checked> Стаціонар</label>
+      <label><input type="radio" name="setting" value="Амбулаторія"> Амбулаторія</label>
+    </div>
     <div class="row period" role="radiogroup" aria-label="Реабілітаційний період">
       <label><input type="radio" name="period" value="Післягострий" checked> Післягострий</label>
       <label><input type="radio" name="period" value="Довготривалий"> Довготривалий</label>
     </div>
     <label class="check"><input type="checkbox" id="st"> Коди S/T у формулах T90–T95 обов'язкові</label>
+    <label class="check" id="sr-wrap" hidden><input type="checkbox" id="sr"> Є запис СР1/СР2/СР3 за останні 3 місяці (послуга АР1)</label>
 
     <section class="field main-field">
       <div class="field-head"><label for="main">Основний діагноз</label><span class="count" id="main-count"></span></div>
@@ -29,6 +34,7 @@
     <section id="slots"></section>
 
     <div id="summary" class="summary" hidden></div>
+    <div id="services" class="services" hidden></div>
     <details id="details">
       <summary>Деталі перевірки</summary>
       <div id="report"></div>
@@ -48,12 +54,14 @@
         <label>Підпис поля <input id="opt-label" value="Код діагнозу"></label>
         <label>id поля (необов'язково) <input id="opt-id" placeholder="напр. input-297"></label>
         <label>Очікування списку, с <input id="opt-timeout" type="number" min="1" max="30" value="6"></label>
+        <label>Текст кнопки додавання <input id="opt-add" value="Додати ще один діагноз"></label>
+        <label>Тип діагнозу для нових блоків <input id="opt-type" value="Новий діагноз"></label>
+        <label class="check"><input type="checkbox" id="opt-autoadd" checked> Додавати блоки діагнозів автоматично</label>
       </div>
     </details>
   </footer>
 
   <script src="logic.js"></script>
-  <script src="fill.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -1,5 +1,4 @@
 """Формування випадаючих списків супутніх діагнозів."""
-from coding_rules import PERIOD_POST
 
 
 def codes(lst):
@@ -14,9 +13,11 @@ def test_no_main_empty(d):
     assert d.companion_candidates(None, 0, []) == []
 
 
-def test_slot1_by_main_formula(d):
+def test_slot1_by_main_formula_and_sfz(d):
+    """A32.1 (формула «ФО») — у полі 1 ФО та обов'язковий Z (Z50.x)."""
     c = d.companion_candidates(d.find("A32.1"), 0, [])
-    assert c and all("ФО" in x.cats for x in c)
+    assert c and all(x.cats & {"ФО", "Z"} for x in c)
+    assert {"G81.9", "Z50.0"} <= codes(c)
 
 
 def test_main_excluded(d):
@@ -25,51 +26,56 @@ def test_main_excluded(d):
 
 
 def test_self_covered_group_not_in_list(d):
-    """G93.1 сам має ФО → у списку поля 1 лише ПП і СП, без «чистих» ФО."""
+    """G93.1 сам має ФО → група «ФО або СП» закрита; у списку лише ПП і Z (Z50.x)."""
     c = d.companion_candidates(d.find("G93.1"), 0, [])
-    assert all(x.cats & {"ПП", "СП"} for x in c)
-    assert "G81.9" not in codes(c)
+    assert all(x.cats & {"ПП", "Z"} for x in c)
+    assert "G81.9" not in codes(c) and "R26.2" not in codes(c)
 
 
-def test_all_self_covered_fallback(d):
-    """G93.7 (ПП, ФО, формула «плюс ФО»): вимог немає, але список ФО лишається для необов'язкових."""
+def test_all_self_covered_keeps_optional(d):
+    """G93.7 (ПП, ФО; формула «ФО»): обов'язковий лише Z (Z50.x), але ФО лишаються в списку як необов'язкові."""
     c = d.companion_candidates(d.find("G93.7"), 0, [])
-    assert c and all("ФО" in x.cats for x in c)
+    assert cats_of(c) >= {"ФО", "Z"}
 
 
 def test_slot2_only_unmet(d):
-    """Сценарій зі скриншоту: A32.1 + G11 → у полі 2 лише СП."""
+    """A32.1 + G11: ФО закрито G11, формула G11 закрита ним самим → у полі 2 лише Z (Z50.x)."""
     main, g11 = d.find("A32.1"), d.find("G11")
     c = d.companion_candidates(main, 1, [g11])
-    assert c and all("СП" in x.cats for x in c)
+    assert c and all("Z" in x.cats for x in c)
 
 
-def test_slot2_after_all_met_shows_non_self_covered(d):
-    main, g11, sp = d.find("A32.1"), d.find("G11"), d.find("R26.2")
-    c3 = d.companion_candidates(main, 2, [g11, sp])
-    assert cats_of(c3) >= {"ФО", "СП"}
-    assert "R26.2" not in codes(c3)          # уже обраний раніше — виключений
+def test_slot3_after_all_met(d):
+    main, g11, z = d.find("A32.1"), d.find("G11"), d.find("Z50.0")
+    c3 = d.companion_candidates(main, 2, [g11, z])
+    assert "ФО" in cats_of(c3)                # у тестовому довіднику єдиний Z-код уже обрано
+    assert "Z50.0" not in codes(c3)          # уже обраний — виключений
 
 
 def test_slot_own_choice_stays_in_its_list(d):
-    """Обраний у полі 2 діагноз не «вибиває» сам себе зі свого списку."""
-    main, g11, sp = d.find("A32.1"), d.find("G11"), d.find("R26.2")
-    assert "R26.2" in codes(d.companion_candidates(main, 1, [g11, sp]))
+    main, g11, z = d.find("A32.1"), d.find("G11"), d.find("Z50.0")
+    assert "Z50.0" in codes(d.companion_candidates(main, 1, [g11, z]))
 
 
 def test_slot2_uses_companion1_formula(d):
-    """G93.1 + I46.0 (ПП у полі 1): для поля 2 лишається лише СП."""
-    main, i46 = d.find("G93.1"), d.find("I46.0")
-    c = d.companion_candidates(main, 1, [i46])
-    assert c and all("СП" in x.cats for x in c)
+    """A32.1 + G81.9: формула G81.9 («ПП») основним не закривається → у полі 2 ПП і Z (Z50.x)."""
+    main, g81 = d.find("A32.1"), d.find("G81.9")
+    c = d.companion_candidates(main, 1, [g81])
+    assert c and all(x.cats & {"ПП", "Z"} for x in c) and cats_of(c) >= {"ПП", "Z"}
+
+
+def test_slot2_after_companion1_formula_met(d):
+    """A32.1 + G11 (формулу закриває сам) → у полі 2 лише Z (Z50.x)."""
+    c = d.companion_candidates(d.find("A32.1"), 1, [d.find("G11")])
+    assert c and all("Z" in x.cats for x in c)
 
 
 def test_later_slots_ignore_companion2_formula(d):
-    """Формули супутніх 2+ не застосовуються: СП з формули G11 (поле 2) не з'являється в полі 3."""
+    """Формула G11 у полі 2 не застосовується: R26.2 (лише СП) не з'являється в полі 3."""
     main, g81, g11 = d.find("A32.1"), d.find("G81.9"), d.find("G11")
     c3 = d.companion_candidates(main, 2, [g81, g11])
-    assert "R26.2" not in codes(c3)          # R26.2 — лише СП
-    assert "R47" in codes(c3)                # ФО — з формули основного
+    assert "R26.2" not in codes(c3)
+    assert "Z50.0" in codes(c3)
 
 
 def test_code_group_in_list(d):
@@ -78,7 +84,6 @@ def test_code_group_in_list(d):
 
 
 def test_pair_code_in_list(d):
-    """Парний *-код основного потрапляє в список, навіть якщо формула його не вимагає."""
     assert "G63.0" in codes(d.companion_candidates(d.find("A17.8"), 0, []))
 
 

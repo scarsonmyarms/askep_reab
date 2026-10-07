@@ -20,31 +20,36 @@ def test_every_formula_parsed(real_dir):
 
 
 def test_screenshot_scenario(real_dir, combo_log):
-    """A32.1 + G11: поле 1 — 268 (ФО), поле 2 — лише СП (93)."""
+    """A32.1 + G11: поле 1 — 271 (ФО 268 + Z 3: Z50.0, Z50.1, Z50.9); поле 2 — лише Z (3)."""
     d = real_dir
     main, g11 = d.find("A32.1"), d.find("G11")
     n1 = len(d.companion_candidates(main, 0, []))
     c2 = d.companion_candidates(main, 1, [g11])
-    only_sp = all("СП" in x.cats for x in c2)
+    only_sp = all("Z" in x.cats for x in c2)
     combo_log.append({
         "title": f"Списки: {main.name} + {g11.name}",
-        "lines": [f"поле 1: {n1} у списку (очікувано 268)",
-                  f"поле 2: {len(c2)} у списку (очікувано 93), лише СП: {'так' if only_sp else 'ні'}"],
-        "passed": n1 == 268 and len(c2) == 93 and only_sp,
+        "lines": [f"поле 1: {n1} у списку (очікувано 271)",
+                  f"поле 2: {len(c2)} у списку (очікувано 3), лише Z: {'так' if only_sp else 'ні'}"],
+        "passed": n1 == 271 and len(c2) == 3 and only_sp,
     })
-    assert n1 == 268
-    assert len(c2) == 93 and only_sp
+    assert n1 == 271
+    assert len(c2) == 3 and only_sp
 
 
 SCENARIOS = [
-    (PERIOD_POST, "G93.7", [], OK),
-    (PERIOD_POST, "G93.1", ["I46.0", "R26.2"], OK),
-    (PERIOD_POST, "A48.0", ["G81.9"], FAIL),
-    (PERIOD_POST, "M54.1", ["M51.1", "R26.2"], FAIL),
-    (PERIOD_LONG, "S06.21", ["G81.9"], FAIL),
-    # приклад з розділу III Правил: за правилом «та/або» = «та» G63.6* (супутній 1) вимагає ще СП
-    (PERIOD_POST, "M00.0", ["G63.6"], FAIL),
-    (PERIOD_POST, "M00.0", ["G63.6", "R26.2"], OK),
+    # умови супутнього 1 закриваються лише супутніми (основний не враховується) + обов'язковий Z (Z50.x)
+    (PERIOD_POST, "I63.3", ["G81.9", "R47", "Z50.1"], FAIL),         # G81.9 (поле 1) вимагає ПП серед супутніх
+    (PERIOD_POST, "I63.3", ["R26.2", "G81.9", "Z50.1"], OK),         # R26.2 закриває свою формулу сам
+    (PERIOD_POST, "I63.3", ["G81.9", "R47"], FAIL),                 # без Z50.x
+    (PERIOD_POST, "G93.7", ["Z50.1"], FAIL),                        # Z50.1 (поле 1) вимагає ПП і ФО серед супутніх
+    (PERIOD_POST, "G93.7", ["R26.2", "Z50.1"], OK),
+    (PERIOD_POST, "G93.1", ["I46.0", "R26.2", "Z50.1"], OK),
+    (PERIOD_POST, "A48.0", ["R26.2", "Z50.1"], OK),
+    (PERIOD_POST, "A48.0", ["Z50.1"], FAIL),                        # бракує ФО або С
+    (PERIOD_POST, "M54.1", ["M51.1", "R26.2", "Z50.1"], FAIL),      # несумісність CR_3_5
+    (PERIOD_LONG, "S06.21", ["G81.9", "Z50.1"], FAIL),              # не той період
+    (PERIOD_POST, "M00.0", ["G63.6", "Z50.1"], OK),                 # розділ III Правил
+    (PERIOD_POST, "M00.0", ["G63.6"], FAIL),                        # без Z50.x
 ]
 
 

@@ -39,6 +39,7 @@ MINI_ROWS = [
     ("R47 Розлади мови (R47.0- R47.8)", "ФО,СП", "ні", f"плюс код {PP}"),
     ("Z96.6 Наявність ортопедичних імплантатів суглобів", "С", "ні", f"плюс код {PP}"),
     ("Z50.0 Реабілітація при хворобах серця", "СФЗ", "ні", ""),
+    ("Z74.1 Потреба у допомозі при самообслуговуванні", "СФЗ", "ні", f"плюс код {PP}"),
     ("M54.1 Радикулопатія", "ПП", "так, якщо етіологію не встановлено", f"плюс код(и) {FO}"),
     ("M51.1 Порушення поперекових міжхребцевих дисків з радикулопатією (G55.1)", "ПП", "так",
      f"плюс код(и) {FO}"),
@@ -129,8 +130,17 @@ def real_dir(request) -> Directory:
         candidates += [str(p) for p in f.glob("*.xlsx") if not p.name.startswith("~$")]
     for p in candidates:
         if p and Path(p).is_file():
-            return Directory(p)
+            return Directory(p, nszu_files=None)      # лише довідник (без файлів НСЗУ)
     pytest.skip(f"Реальний довідник не знайдено. Перевірено: {[c for c in candidates if c]}")
+
+
+@pytest.fixture(scope="session")
+def real_nszu(real_dir) -> Directory:
+    """Реальний довідник + файли НСЗУ з тієї самої папки (перелік основних, формули, пари †/*)."""
+    d = Directory(real_dir.path)
+    if not d.nszu or not all([d.nszu.main_list, d.nszu.formulas_main, d.nszu.formulas_add, d.nszu.pairs]):
+        pytest.skip("Файли НСЗУ не знайдено поруч із довідником (потрібні всі 4)")
+    return d
 
 
 @pytest.fixture

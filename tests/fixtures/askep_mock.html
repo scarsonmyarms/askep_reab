@@ -1,0 +1,59 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8">
+<!-- Імітація блоку «Діагноз №N» Askep (Vuetify 2) для тестів extension/fill.js. Не є копією реальної сторінки.
+     Поведінка: «Тип діагнозу» — v-select; поле «Код діагнозу» з'являється лише після вибору типу;
+     код — автокомпліт із затримкою «серверного» пошуку; «Додати ще один діагноз» додає блок із затримкою. -->
+<style>
+.block{border:1px solid #ccc;margin:10px;padding:10px}.v-menu__content{position:absolute;background:#fff;border:1px solid #999;z-index:9}
+.v-list-item{padding:4px}.v-menu__content:not(.menuable__content__active){display:none}
+</style></head><body>
+<div id="blocks"></div>
+<button type="button" class="v-btn v-btn--outlined" id="add-btn"><span class="v-btn__content"><i aria-hidden="true" class="v-icon mdi mdi-plus"></i>
+				      Додати ще один діагноз
+			      </span></button>
+<script>
+const ICD=["G81.9 Геміплегія, неуточнена","G81.0 В'яла геміплегія","G81.1 Спастична геміплегія","I63.3 Інфаркт головного мозку внаслідок тромбозу","R47.0 Дисфазія та афазія","R47.1 Дизартрія","R26.2 Утруднення при ходьбі","A32.1 Лістеріозний менінгіт","G11.1 Рання мозочкова атаксія","G11.2 Пізня мозочкова атаксія"];
+const TYPES=["Новий діагноз","Діагноз, встановлений під час попередніх взаємодій"];
+let uid=290, nBlocks=0;
+
+function menuFor(input){
+  const menu=document.createElement('div');menu.className='v-menu__content';
+  const list=document.createElement('div');list.setAttribute('role','listbox');list.className='v-list v-select-list';
+  menu.appendChild(list);document.body.appendChild(menu);
+  menu.show=(items,onPick)=>{list.innerHTML='';
+    items.forEach(x=>{const it=document.createElement('div');it.className='v-list-item';it.setAttribute('role','option');
+      it.innerHTML='<div class="v-list-item__content"><div class="v-list-item__title"></div></div>';
+      it.querySelector('.v-list-item__title').textContent=x;
+      it.addEventListener('click',()=>{onPick(x);menu.classList.remove('menuable__content__active');});list.appendChild(it);});
+    const r=input.getBoundingClientRect();menu.style.left=r.left+'px';menu.style.top=(r.bottom+scrollY)+'px';
+    menu.classList.toggle('menuable__content__active',items.length>0);};
+  return menu;
+}
+function setSelection(box,text){let s=box.querySelector('.v-select__selection');
+  if(!s){s=document.createElement('div');s.className='v-select__selection';box.querySelector('.v-select__selections').prepend(s);}
+  s.textContent=text;const i=box.querySelector('input');i.value='';i.removeAttribute('placeholder');}
+
+function addCodeField(b){
+  const id='input-'+(uid+=7);
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`<div class="row"><label>Код діагнозу (МКХ-10 АМ)</label> <span>*</span> Шукати за: <input type="radio" checked> за кодами та назвами <input type="radio"> за класами</div>
+  <div class="v-input v-autocomplete"><div class="v-input__slot"><div class="v-select__selections"><input id="${id}" placeholder="Оберіть" type="text" autocomplete="off"></div></div></div>`;
+  b.appendChild(wrap);
+  const inp=wrap.querySelector('#'+id), box=inp.closest('.v-input'), menu=menuFor(inp); let t;
+  inp.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{const q=inp.value.toLowerCase();   // «серверний» пошук
+    menu.show(q?ICD.filter(x=>x.toLowerCase().includes(q)):[],x=>setSelection(box,x));},500);});
+}
+
+function addBlock(n,typed){
+  nBlocks++; n=n||nBlocks;
+  const b=document.createElement('div');b.className='block';
+  b.innerHTML=`<div class="hdr">Діагноз №${n},</div><label>Тип діагнозу</label>
+  <div class="v-input v-select type"><div class="v-input__slot"><div class="v-select__selections"><input readonly placeholder="Оберіть" type="text"></div></div></div>`;
+  document.getElementById('blocks').appendChild(b);
+  const tbox=b.querySelector('.type'), tin=tbox.querySelector('input'), menu=menuFor(tin);
+  const pickType=x=>{setSelection(tbox,x); if(!b.querySelector('.v-autocomplete')) setTimeout(()=>addCodeField(b),300);};
+  tbox.querySelector('.v-input__slot').addEventListener('click',()=>menu.show(TYPES,pickType));
+  if(typed){setSelection(tbox,TYPES[0]);addCodeField(b);}
+}
+addBlock(1,true);addBlock(2,true);
+document.getElementById('add-btn').addEventListener('click',()=>setTimeout(()=>addBlock(),600));   // блок з'являється із затримкою, тип порожній
+</script></body></html>
