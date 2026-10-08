@@ -92,3 +92,7 @@ button:disabled { opacity: .5; cursor: default; }
 .services .svc.fail { background: var(--fail-bg); color: var(--fail); }
 .row.setting { border-color: var(--teal-dark); }
 [hidden] { display: none !important; }
+.check.barthel { margin: 0 0 6px; font-size: 12px; color: var(--ink); }
+.conclusion textarea { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font: inherit; resize: vertical; min-height: 54px; }
+.conclusion textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 2px #26c6ca33; }
+.conclusion { margin-top: 6px; }

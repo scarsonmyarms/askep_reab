@@ -33,6 +33,10 @@
 
     <section id="slots"></section>
 
+    <section class="field conclusion">
+      <div class="field-head"><label for="conclusion">Заключення лікаря</label><span class="count" id="conclusion-count">0 / 3000</span></div>
+      <textarea id="conclusion" rows="3" maxlength="3000" placeholder="Текст заключення — буде внесено в поле «Заключення лікаря» на вкладці «Діагностичні звіти»"></textarea>
+    </section>
     <div id="summary" class="summary" hidden></div>
     <div id="services" class="services" hidden></div>
     <details id="details">
@@ -42,6 +46,7 @@
   </main>
 
   <footer>
+    <label class="check barthel"><input type="checkbox" id="opt-barthel" checked> Після діагнозів: звіт 96037-00 і спостереження Barthel_Extended (шкала Бартел)</label>
     <div class="actions">
       <button id="fill" class="primary" disabled>Заповнити на сторінці</button>
       <button id="probe" title="Підсвітити поля «Код діагнозу», які знайде розширення">Знайти поля</button>

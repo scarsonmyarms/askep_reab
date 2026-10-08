@@ -12,7 +12,7 @@ let mainListPeriod = null;
 let fillArmed = false;
 let plan = [];
 // values — значення полів супутніх за ключами плану (m0, m1, p:main, c0, f0 …)
-const state = { setting: SETTING_INPATIENT, sr: false, period: PERIOD_POST, st: false, main: "", values: {}, opts: {} };
+const state = { setting: SETTING_INPATIENT, sr: false, period: PERIOD_POST, st: false, main: "", values: {}, conclusion: "", opts: {} };
 
 // ------------------------------------------------------------------ збереження стану
 // зберігаємо одразу: popup закривається, щойно користувач клацне поза ним
@@ -25,7 +25,7 @@ async function load() {
   const data = await (await fetch(chrome.runtime.getURL("directory.json"))).json();
   dir = new Directory(data);
   const extra = (data.sources || []).length - 1;
-  $("source").textContent = `${dir.items.length} діагнозів · ${data.source}${extra > 0 ? ` + ${extra} файли НСЗУ` : ""}`;
+  $("source").textContent = `${dir.items.length} діагнозів · ${data.source}${extra > 0 ? ` + ${extra} ${extra === 1 ? "файл" : extra < 5 ? "файли" : "файлів"} НСЗУ` : ""}`;
   $("source").title = (data.sources || [data.source]).join("\n");
   restoreInputs();
   refresh();
@@ -37,12 +37,15 @@ function restoreInputs() {
   $("sr").checked = !!state.sr;
   $("st").checked = !!state.st;
   $("main").value = state.main;
+  $("conclusion").value = state.conclusion || "";
+  $("conclusion-count").textContent = `${(state.conclusion || "").length} / 3000`;
   $("opt-label").value = state.opts.labelText || "Код діагнозу";
   $("opt-id").value = state.opts.inputId || "";
   $("opt-timeout").value = (state.opts.timeout || 6000) / 1000;
   $("opt-add").value = state.opts.addButtonText || "Додати ще один діагноз";
   $("opt-autoadd").checked = state.opts.autoAdd !== false;
   $("opt-type").value = state.opts.typeText || "Новий діагноз";
+  $("opt-barthel").checked = state.opts.barthel !== false;
 }
 
 function fillDatalist(dl, items) {
@@ -222,6 +225,8 @@ function fillOptions(extra = {}) {
     addButtonText: $("opt-add").value.trim() || "Додати ще один діагноз",
     autoAdd: $("opt-autoadd").checked,
     typeText: $("opt-type").value.trim() || "Новий діагноз",
+    barthel: $("opt-barthel").checked,
+    conclusion: $("conclusion").value,
     ...extra,
   };
 }
@@ -262,7 +267,7 @@ async function onFill() {
     if (!res.fields.length) {
       showResult([msg(FAIL, "На сторінці не знайдено полів «Код діагнозу». Відкрийте форму діагнозів або перевірте налаштування.")]);
     } else {
-      showResult(res.results.map((r) => msg(r.level, `${r.role} ${r.code}: ${r.text}`)));
+      showResult(res.results.map((r) => msg(r.level, `${r.role}${r.code ? " " + r.code : ""}: ${r.text}`)));
     }
   } catch (e) {
     showResult([msg(FAIL, `Не вдалося виконати на сторінці: ${e.message}`)]);
@@ -295,6 +300,12 @@ document.addEventListener("input", (e) => {
   else if (t.id === "sr") state.sr = t.checked;
   else if (t.id === "st") state.st = t.checked;
   else if (t.id === "main") state.main = t.value;
+  else if (t.id === "conclusion") {
+    state.conclusion = t.value;
+    $("conclusion-count").textContent = `${t.value.length} / 3000`;
+    save();
+    return;
+  }
   else if (t.dataset && t.dataset.key) state.values[t.dataset.key] = t.value;
   else if (t.id && t.id.startsWith("opt-")) {
     Object.assign(state.opts, fillOptions());
@@ -329,6 +340,7 @@ $("probe").addEventListener("click", onProbe);
 $("reset").addEventListener("click", () => {
   state.main = "";
   state.values = {};
+  state.conclusion = "";
   restoreInputs();
   showResult([]);
   refresh();
