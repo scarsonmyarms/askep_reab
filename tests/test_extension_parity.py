@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from coding_rules import PERIOD_LONG, PERIOD_POST, SETTING_INPATIENT, SETTING_OUTPATIENT, plan_slots, slot_candidates, slot_fits, validate
+from coding_rules import PERIOD_LONG, PERIOD_POST, SETTING_INPATIENT, SETTING_OUTPATIENT, swap_main, plan_slots, slot_candidates, slot_fits, validate
 from export_json import export
 
 NODE = shutil.which("node")
@@ -74,12 +74,18 @@ def py_plan_result(directory, s):
     slots = plan_slots(directory, main, s["values"])
     rep = validate(directory, s["period"], s["main"], [x.value for x in slots], s["st"],
                    setting=s["setting"], sr_record=s["sr"])
+    sw = next((a for a in rep.advice if a["swap"]), None)
+    swapped = None
+    if sw:
+        m, v = swap_main(directory, s["main"], s["values"], sw["swap"])
+        swapped = {"main": m, "values": v}
     L = lambda ls: [{"level": l.level, "text": l.text} for l in ls]
     return {
+        "swap": swapped,
         "plan": [[x.key, x.role, x.label, x.value, len(slot_candidates(directory, main, slots, i)), slot_fits(x)]
                  for i, x in enumerate(slots)],
         "report": {"main": L(rep.main), "main_groups": L(rep.main_groups), "exclusions": L(rep.exclusions),
-                   "summary": {"level": rep.summary.level, "text": rep.summary.text}, "services": L(rep.services),
+                   "summary": {"level": rep.summary.level, "text": rep.summary.text}, "services": L(rep.services), "advice": rep.advice,
                    "companions": [[n, L(ls)] for n, ls in rep.companions]},
     }
 
@@ -93,7 +99,7 @@ def py_result(directory, s):
     sel = [directory.find(c) for c in s["comps"]]
     return {
         "report": {"main": L(rep.main), "main_groups": L(rep.main_groups), "exclusions": L(rep.exclusions),
-                   "summary": {"level": rep.summary.level, "text": rep.summary.text}, "services": L(rep.services),
+                   "summary": {"level": rep.summary.level, "text": rep.summary.text}, "services": L(rep.services), "advice": rep.advice,
                    "companions": [[n, L(ls)] for n, ls in rep.companions]},
         "lists": [len(directory.companion_candidates(main, i, sel)) for i in range(len(sel))],
         "mains": len(directory.main_candidates(s["period"])),

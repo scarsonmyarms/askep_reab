@@ -119,14 +119,16 @@ class TestFormulas:
         assert all("Z" not in g.tokens for g in nz.find("A32.1").groups)
         r = validate(nz, PERIOD_POST, "A32.1", ["G81.9"])
         assert r.summary.level == FAIL and any("Діагноз_Z" in l.text for l in r.main_groups)
-        assert validate(nz, PERIOD_POST, "A32.1", ["G81.9", Z]).summary.level == OK
+        assert validate(nz, PERIOD_POST, "A32.1", ["G81.9", Z, "I46.0"]).summary.level == OK
 
     def test_comp_formula_from_additional_file(self, nz):
         """G81.9 у ролі супутнього: «ПП або ФО» (файл додаткових), а не «ПП» з довідника."""
         g81 = nz.find("G81.9")
         assert [g.tokens for g in g81.cgroups] == [["ПП", "ФО"]]
-        r = validate(nz, PERIOD_POST, "G54.2", ["G81.9", Z])
-        assert any("самим діагнозом" in l.text for l in r.companions[0][1])
+        r = validate(nz, PERIOD_POST, "G54.2", ["G81.9", Z])            # G81.9 (ФО) сам себе не закриває
+        assert any("Його група 1: бракує" in l.text for l in r.companions[0][1])
+        r = validate(nz, PERIOD_POST, "G54.2", ["G81.9", Z, "I46.0"])
+        assert any("Його група 1" in l.text and "виконано" in l.text for l in r.companions[0][1])
 
     def test_code_groups_kinds(self, nz):
         kinds = [(g.kind, g.tokens) for g in nz.find("T92.3").groups]
@@ -136,7 +138,7 @@ class TestFormulas:
         """M00.01: «AND G63.6» — обов'язково навіть з перемикачем S/T «рекомендовані»."""
         r = validate(nz, PERIOD_POST, "M00.01", ["G81.9", Z], st_required=False)
         assert any(l.level == FAIL and "G63.6" in l.text for l in r.main_groups)
-        assert validate(nz, PERIOD_POST, "M00.01", ["G63.6", Z]).summary.level == OK
+        assert validate(nz, PERIOD_POST, "M00.01", ["G63.6", Z, "I46.0"]).summary.level == OK
 
 
 class TestPairs:
@@ -154,7 +156,7 @@ class TestPairs:
         assert m05.pair_flag == 1 and m05.pair_tokens == ["G63.6"]
         assert "G63.6" in {x.code for x in nz.companion_candidates(m05, 0, [])}
         assert validate(nz, PERIOD_POST, "M05.0", ["G81.9", Z]).summary.level == FAIL
-        assert validate(nz, PERIOD_POST, "M05.0", ["G63.6", Z]).summary.level == OK
+        assert validate(nz, PERIOD_POST, "M05.0", ["G63.6", Z, "I46.0"]).summary.level == OK
 
     def test_marked_dagger_requires_star(self, nz):
         assert nz.find("A17.8").pair_flag == 1

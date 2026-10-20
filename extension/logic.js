@@ -4,7 +4,7 @@
  *  - формула (O) застосовується лише до основного та супутнього 1;
  *  - «плюс» — окремі обов'язкові групи, «та/або» і «або» — варіанти в групі (розібрано в Python);
  *  - у кожному випадку обов'язковий Діагноз_Z — коди Z50.x (case_groups у directory.json); СФЗ — необов'язкова;
- *  - група виконана самим діагнозом, якщо він має відповідну категорію;
+ *  - діагноз НЕ закриває власну формулу своєю категорією (як у перевірці НСЗУ);
  *  - у випадаючому списку — лише категорії ще не закритих вимог.
  * Файл працює і в браузері (глобальний об'єкт RehabLogic), і в Node (module.exports) — для тестів.
  */
@@ -122,9 +122,7 @@
 
     companionTokens(main, slot, selected, narrow = true) {
       const formula = this.formulaGroups(main, slot, selected);
-      let own = formula.filter(([o, g]) => !matches(o, g.ts));
-      if (!own.length) own = formula;
-      own = own.concat(this.caseGroups.map((g) => [main, g]));
+      const own = formula.concat(this.caseGroups.map((g) => [main, g]));   // діагноз не закриває власну формулу
       let use = own;
       if (narrow) {
         const others = [main, ...selected.filter((d, j) => j !== slot && d)];
@@ -150,10 +148,7 @@
   const groupMet = (g, others) => others.some((o) => matches(o, g.ts));
 
   function groupLine(g, met, stRequired, prefix, selfD) {
-    if (selfD && matches(selfD, g.ts)) {
-      const own = CATS.filter((c) => selfD.catSet.has(c) && g.tokens.includes(c)).join(", ") || selfD.code;
-      return line(OK, `${prefix}${g.text} — виконано самим діагнозом (${own}), додатковий не потрібен`);
-    }
+    // selfD лишено для сумісності: діагноз НЕ закриває власну формулу (так перевіряє НСЗУ)
     if (met) return line(OK, `${prefix}${g.text} — виконано`);
     if (g.kind === "code" && !stRequired)
       return line(WARN, `${prefix}${g.text} — рекомендовано додати (CR_2_6, CR_5_6, CR_8_2, CR_11_2)`);
@@ -190,7 +185,7 @@
   }
 
   function validate(dir, period, mainText, companionTexts, stRequired = false, opts = {}) {
-    const rep = { main: [], main_groups: [], companions: [], exclusions: [], summary: line(INFO, ""), services: [] };
+    const rep = { main: [], main_groups: [], companions: [], exclusions: [], summary: line(INFO, ""), services: [], advice: [] };
     const main = mainText ? dir.find(mainText) : null;
     // позиції зберігаються: супутній 1 — це перше поле, навіть якщо воно порожнє
     const compsRaw = [...companionTexts];
@@ -267,6 +262,8 @@
 
     const levels = [...rep.main, ...rep.main_groups, ...rep.exclusions, ...rep.companions.flatMap(([, l]) => l)]
       .map((l) => l.level);
+    rep.advice = mainAdvice(period, main, known);
+    for (const a of rep.advice) rep.main.push(line(a.level, `${a.title}: ${a.text}`));
     if (opts.setting === SETTING_OUTPATIENT && dir.ambulatory)
       rep.services = ambulatoryLines(dir.ambulatory, main, known, !!opts.sr);
     if (!mainInPeriod(main, period)) rep.summary = line(FAIL, "Основний діагноз некоректний");
@@ -304,8 +301,7 @@
       return { key, role, label, tokens, value: v, diag: d };
     };
     const slots = [];
-    const groups = main.groups.filter((g) => !matches(main, g.ts))
-      .concat(dir.caseGroups.filter((g) => !matches(main, g.ts)));
+    const groups = main.groups.concat(dir.caseGroups);     // діагноз не закриває власну формулу
     groups.forEach((g, i) => slots.push(mk(`m${i}`, "main", `${ROLE_TITLES.main}: ${g.text}`, [...g.tokens])));
     const mainSlots = [...slots];
     const freeVals = Array.from({ length: MAX_SLOTS }, (_, i) => mk(`f${i}`, "free", "", null));
@@ -340,7 +336,7 @@
     if (c1) {
       const pool = slots.filter((s) => s.diag && s.key !== "m0").map((s) => s.diag).concat(freeDiags);
       c1.cgroups.forEach((g, k) => {
-        const covered = matches(c1, g.ts) || pool.some((x) => matches(x, g.ts)) || willCover(g);
+        const covered = pool.some((x) => matches(x, g.ts)) || willCover(g);
         if (covered && !clean(values[`c${k}`] || "")) return;
         const s = mk(`c${k}`, "comp1", `${ROLE_TITLES.comp1} (${c1.code}): ${g.text}`, [...g.tokens]);
         slots.push(s);
@@ -361,8 +357,66 @@
     return slots;
   }
 
+  // ---------------------------------------------------------------- вибір основного (порт main_advice / swap_main)
+  const ACUTE_ETIOLOGY = ["I60", "I61", "I62", "I63", "I64", "S"];
+  const PAIN_CODES = ["M54.2", "M54.4", "M54.5", "M54.6", "M54.8", "M54.9", "M25.5", "M79.1", "M79.2", "M79.6",
+    "R51", "R52", "R07", "R10", "G44"];
+  const startsAny = (code, list) => list.some((p) => code.startsWith(p));
+  const isPain = (code) => startsAny(code, PAIN_CODES);
+
+  function mainAdvice(period, main, comps) {
+    const out = [];
+    const known = comps.filter((c) => c && c.source !== "введено");
+    const swapFor = (cands) => cands.find((c) => mainInPeriod(c, period)) || null;
+    if (isPain(main.code)) {
+      const struct = known.filter((c) => c.catSet.has("ПП") && !isPain(c.code) && "MST".includes(c.code[0]));
+      if (struct.length) {
+        const s = swapFor(struct);
+        out.push({ kind: "pain", level: WARN, swap: s ? s.name : null, swap_code: s ? s.code : null,
+          title: "Біль основним при встановленій структурній патології",
+          text: `Серед супутніх є ${struct[0].code} — структурна причина болю. Код ізольованого болю ` +
+            `основним допускається лише без встановленої причини (розділ ІІ Правил, CR_3_6). ` +
+            `Якщо реабілітація спрямована саме на хронічний больовий синдром (група 7) — залиште як є.` });
+      }
+      return out;
+    }
+    if (!main.catSet.has("ПП") && (main.catSet.has("ФО") || main.catSet.has("СП"))) {
+      const acute = known.filter((c) => c.catSet.has("ПП") && startsAny(c.code, ACUTE_ETIOLOGY));
+      if (acute.length) {
+        const long = period === PERIOD_LONG;
+        const s = long ? null : swapFor(acute);
+        out.push({ kind: "etiology", level: long ? INFO : WARN, swap: s ? s.name : null, swap_code: s ? s.code : null,
+          title: "Причину встановлено — основним, як правило, має бути етіологія",
+          text: `Основний ${main.code} описує функціональне обмеження, а його причина ${acute[0].code} ` +
+            `вказана серед супутніх. ` + (long
+              ? "У довготривалому періоді основним допускається стійке функціональне обмеження (CR_1_2, CR_2_6, CR_4_7)."
+              : "У післягострому періоді основним зазначають першопричину (CR_1_1, CR_2_5, CR_4_6, CR_8_1). " +
+                "Якщо реабілітація спрямована саме на це обмеження — залиште як є.") });
+      }
+    }
+    return out;
+  }
+
+  // зробити супутній основним: прибрати його з полів, колишній основний — у перше поле, роль якого він виконує
+  function swapMain(dir, mainText, values, candText) {
+    const main = dir.find(mainText), cand = dir.find(candText);
+    if (!main || !cand) return { main: mainText, values: { ...values } };
+    const vals = {};
+    for (const [k, v] of Object.entries(values)) if (clean(v) && dir.find(v) !== cand) vals[k] = v;
+    const slots = planSlots(dir, cand, vals);
+    for (const s of slots) {
+      if (!clean(s.value) && s.role !== "free" && s.tokens !== null && matches(main, new TokenSet(s.tokens))) {
+        vals[s.key] = main.name;
+        return { main: cand.name, values: vals };
+      }
+    }
+    const free = slots.find((s) => s.role === "free" && !clean(s.value));
+    vals[free ? free.key : "f0"] = main.name;
+    return { main: cand.name, values: vals };
+  }
+
   const api = { CATS, PERIOD_POST, PERIOD_LONG, SETTING_INPATIENT, SETTING_OUTPATIENT, OK, WARN, FAIL, INFO, Directory, validate, matches, mainInPeriod,
-    planSlots, slotCandidates, slotFits, ROLE_TITLES };
+    planSlots, slotCandidates, slotFits, ROLE_TITLES, mainAdvice, swapMain };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RehabLogic = api;
 })(typeof self !== "undefined" ? self : this);

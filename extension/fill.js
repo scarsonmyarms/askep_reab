@@ -351,7 +351,7 @@ async function askepFillDiagnoses(entries, opts) {
 
   // ---------------------------------------------------------------- шкала Бартел: звіт 96037-00 + спостереження
   async function barthelSteps() {
-    const out = [];
+    const out = live([]);
     const code = o.reportCode;
     const codeTest = (t) => t.includes(code);
 
@@ -413,6 +413,19 @@ async function askepFillDiagnoses(entries, opts) {
     return out;
   }
 
+  // ---------------------------------------------------------------- прогрес: o.onStep(крок) для кожного нового результату
+  const notified = new WeakSet();
+  const notify = (x) => {
+    if (!x || typeof x !== "object" || notified.has(x)) return;
+    notified.add(x);
+    if (typeof o.onStep === "function") { try { o.onStep({ ...x }); } catch (_) { /* панель не має ламати заповнення */ } }
+  };
+  function live(arr) {
+    const push = arr.push.bind(arr);
+    arr.push = (...xs) => { xs.forEach((x) => { push(x); notify(x); }); return arr.length; };
+    return arr;
+  }
+
   // ---------------------------------------------------------------- основний сценарій
   const diagTab = findTab(o.diagTab);
   if (diagTab) await openTab(o.diagTab);              // спершу — вкладка «Діагнози» (якщо вкладки є)
@@ -431,7 +444,7 @@ async function askepFillDiagnoses(entries, opts) {
     return { fields: state, results: [] };
   }
 
-  const results = [];
+  const results = live([]);
   const free = fields.filter((f, i) => !state[i].value);
   for (const e of entries) {
     const re = codeRe(e.code);
@@ -463,5 +476,5 @@ async function askepFillDiagnoses(entries, opts) {
     results.push(tr.ok || tr.missing ? await fillConclusion()
                                      : res("Заключення лікаря", "✖", `вкладка «${o.reportsTab}» не відкрилася`));
   }
-  return { fields: state, results };
+  return { fields: state, results: [...results] };
 }

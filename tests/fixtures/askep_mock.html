@@ -6,10 +6,25 @@
 .block{border:1px solid #ccc;margin:10px;padding:10px}.v-menu__content{position:absolute;background:#fff;border:1px solid #999;z-index:9}
 .v-list-item{padding:4px}.v-menu__content:not(.menuable__content__active){display:none}
 </style></head><body>
+<div class="v-tabs">
+  <div role="tab" class="v-tab" aria-selected="false" data-panel="p-diag">
+            Діагнози
+          </div>
+  <div role="tab" class="v-tab v-tab--active" aria-selected="true" data-panel="p-rep">
+            Діагностичні звіти
+          </div>
+  <div role="tab" class="v-tab" aria-selected="false" data-panel="p-obs">
+            Спостереження
+          </div>
+</div>
+<div class="v-window-item" id="p-diag" style="display:none">
 <div id="blocks"></div>
 <button type="button" class="v-btn v-btn--outlined" id="add-btn"><span class="v-btn__content"><i aria-hidden="true" class="v-icon mdi mdi-plus"></i>
 				      Додати ще один діагноз
 			      </span></button>
+</div>
+<div class="v-window-item v-window-item--active" id="p-rep"><div id="rep"></div></div>
+<div class="v-window-item" id="p-obs" style="display:none"><div id="obs"></div></div>
 <script>
 const ICD=["G81.9 Геміплегія, неуточнена","G81.0 В'яла геміплегія","G81.1 Спастична геміплегія","I63.3 Інфаркт головного мозку внаслідок тромбозу","R47.0 Дисфазія та афазія","R47.1 Дизартрія","R26.2 Утруднення при ходьбі","A32.1 Лістеріозний менінгіт","G11.1 Рання мозочкова атаксія","G11.2 Пізня мозочкова атаксія"];
 const TYPES=["Новий діагноз","Діагноз, встановлений під час попередніх взаємодій"];
@@ -55,5 +70,59 @@ function addBlock(n,typed){
   if(typed){setSelection(tbox,TYPES[0]);addCodeField(b);}
 }
 addBlock(1,true);addBlock(2,true);
+
+// ---- вкладки (Vuetify 2: role=tab, .v-window-item--active)
+document.querySelectorAll('[role="tab"]').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('[role="tab"]').forEach(x=>{x.setAttribute('aria-selected','false');x.classList.remove('v-tab--active');});
+  document.querySelectorAll('.v-window-item').forEach(p=>{p.classList.remove('v-window-item--active');p.style.display='none';});
+  setTimeout(()=>{t.setAttribute('aria-selected','true');t.classList.add('v-tab--active');
+    const p=document.getElementById(t.dataset.panel);p.style.display='';p.classList.add('v-window-item--active');},200);
+}));
+// ---- загальний список-поле: readonly — v-select, інакше — автокомпліт із пошуком
+function makeSelect(parent,label,items,{readonly=false,onPick=null}={}){
+  const w=document.createElement('div');
+  w.innerHTML=`<label>${label}</label><div class="v-input v-select ${readonly?'':'v-autocomplete'}"><div class="v-input__slot"><div class="v-select__selections"><input placeholder="Оберіть" type="text" autocomplete="off" ${readonly?'readonly="readonly"':''}></div></div></div>`;
+  parent.appendChild(w);
+  const box=w.querySelector('.v-input'), inp=box.querySelector('input'), menu=menuFor(inp);
+  const list=()=>typeof items==='function'?items():items;
+  const pick=x=>{setSelection(box,x); if(onPick) onPick(x);};
+  if(readonly) box.querySelector('.v-input__slot').addEventListener('click',()=>menu.show(list(),pick));
+  else{ let t; box.querySelector('.v-input__slot').addEventListener('click',()=>{ if(!inp.value) menu.show(list(),pick);});
+        inp.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{const q=inp.value.toLowerCase();menu.show(list().filter(x=>x.toLowerCase().includes(q)),pick);},400);}); }
+  return box;
+}
+// ---- «Діагностичні звіти»: виконавець (інший список) + код звіту + опис
+let reportCode='';
+const rep=document.getElementById('rep');
+makeSelect(rep,'Виконавець',['Іваненко І.І.','Петренко П.П.']);
+makeSelect(rep,'Код',["96019-00 «Оцінка рухових функцій»","96037-00 «Інше обстеження, консультування або оцінка»"],{onPick:x=>reportCode=x});
+rep.insertAdjacentHTML('beforeend',`<div class="col col-12"><div class="v-subheader mb-2 theme--light">Заключення лікаря<sup><i class="mdi mdi-asterisk"></i></sup> <button type="button" class="v-btn"><span class="v-btn__content">Підтягнути аналізи з ЕМК пацієнта</span></button></div>
+ <div class="v-input v-textarea"><div class="v-input__slot"><div class="v-text-field__slot"><textarea id="input-1135" placeholder="Додати опис" rows="2"></textarea></div></div><div class="v-counter">0 / 3000</div></div></div>`);
+rep.querySelector('#input-1135').addEventListener('input',e=>rep.querySelector('.v-counter').textContent=e.target.value.length+' / 3000');
+// ---- «Спостереження»: перемикач «Загальні спостереження (LOINC)» → категорія (readonly) → вид → посилання
+const obs=document.getElementById('obs');
+obs.innerHTML=`<div class="v-radio-group">
+ <div class="v-radio theme--light"><div class="v-input--selection-controls__input"><input aria-checked="false" id="input-1261" role="radio" type="radio" name="radio-1260" value="default"></div><label for="input-1261" class="v-label theme--light">Загальні спостереження (LOINC)</label></div>
+ <div class="v-radio theme--light"><div class="v-input--selection-controls__input"><input aria-checked="false" id="input-1263" role="radio" type="radio" name="radio-1260" value="other"></div><label for="input-1263" class="v-label theme--light">Інший тип (тестовий)</label></div>
+</div><div id="obs-form"></div>`;
+obs.querySelectorAll('input[type=radio]').forEach(r=>r.addEventListener('change',()=>{
+  obs.querySelectorAll('input[type=radio]').forEach(x=>x.setAttribute('aria-checked',String(x.checked)));
+  if(r.value==='default' && !document.getElementById('obs-form').children.length) setTimeout(buildObsForm,300);   // поля з'являються після вибору
+}));
+function buildObsForm(){
+  const f=document.getElementById('obs-form');
+  makeSelect(f,'Категорія',['Життєві показники','Шкали оцінки, опитування','Лабораторні дослідження'],{readonly:true,onPick:()=>setTimeout(()=>{
+    if(!f.querySelector('.obs-type')) makeSelect(f.querySelector('#type-slot'),'Вид',
+      ['96761-2 Загальна оцінка Індекс Бартела','Barthel_Extended - Підсумкова оцінка Індекс Бартел (розширений)','Шкала Ренкіна']).classList.add('obs-type');},300)});
+  f.insertAdjacentHTML('beforeend','<div id="type-slot"></div>');
+  // зайве поле зі списком перед посиланням — розширення не повинно його відкривати
+  makeSelect(f,'Виконавець спостереження',['Іваненко І.І.','Петренко П.П.']);
+  const col=document.createElement('div'); col.className='col col-6';
+  col.innerHTML='<div class="v-subheader mb-2 theme--light">Посилання на діагностичний звіт</div>';
+  f.appendChild(col);
+  makeSelect(col,'',()=>['(96019-00) Оцінка рухових функцій (Діагностична процедура) - 05.10.2026 10:00',
+    '(96037-00) Інше обстеження, консультування або оцінка (Діагностична процедура) - 01.09.2026 09:00']
+    .concat(reportCode.startsWith('96037-00')?['(96037-00) Інше обстеження, консультування або оцінка (Діагностична процедура) - 06.10.2026 00:00']:[]));
+}
 document.getElementById('add-btn').addEventListener('click',()=>setTimeout(()=>addBlock(),600));   // блок з'являється із затримкою, тип порожній
 </script></body></html>

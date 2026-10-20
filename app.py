@@ -142,7 +142,9 @@ class App(tk.Tk):
             messagebox.showerror("Помилка", f"Не вдалося прочитати довідник:\n{e}")
             return
         src = self.directory.sources
-        extra = f" + {len(src) - 1} файли НСЗУ" if len(src) > 1 else " (файлів НСЗУ поруч не знайдено)"
+        n = len(src) - 1
+        word = "файл" if n == 1 else ("файли" if n < 5 else "файлів")
+        extra = f" + {n} {word} НСЗУ" if n else " (файлів НСЗУ поруч не знайдено)"
         self.file_lbl.config(text=f"{path}  —  {len(self.directory.items)} діагнозів{extra}", foreground="#000")
         self.refresh()
 

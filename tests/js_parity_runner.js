@@ -7,14 +7,18 @@ const L = require(path.join(__dirname, "..", "extension", "logic.js"));
 const dir = new L.Directory(JSON.parse(fs.readFileSync(process.argv[2], "utf8")));
 const scenarios = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
 const flat = (rep) => ({
-  main: rep.main, main_groups: rep.main_groups, exclusions: rep.exclusions, summary: rep.summary, services: rep.services,
+  main: rep.main, main_groups: rep.main_groups, exclusions: rep.exclusions, summary: rep.summary, services: rep.services, advice: rep.advice,
   companions: rep.companions.map(([n, ls]) => [n, ls]),
 });
 const out = scenarios.map((s) => {
   if (s.values) {   // план полів за ролями
     const main = dir.find(s.main);
     const slots = L.planSlots(dir, main, s.values);
+    const rep = L.validate(dir, s.period, s.main, slots.map((x) => x.value), s.st, { setting: s.setting, sr: s.sr });
+    const sw = rep.advice.find((a) => a.swap);
+    const swapped = sw ? L.swapMain(dir, s.main, s.values, sw.swap) : null;
     return {
+      swap: swapped,
       plan: slots.map((x, i) => [x.key, x.role, x.label, x.value, L.slotCandidates(dir, main, slots, i).length, L.slotFits(x)]),
       report: flat(L.validate(dir, s.period, s.main, slots.map((x) => x.value), s.st, { setting: s.setting, sr: s.sr })),
     };

@@ -25,36 +25,40 @@ def test_main_excluded(d):
     assert main.name not in {x.name for x in d.companion_candidates(main, 0, [])}
 
 
-def test_self_covered_group_not_in_list(d):
-    """G93.1 сам має ФО → група «ФО або СП» закрита; у списку лише ПП і Z (Z50.x)."""
+def test_own_category_does_not_close_formula(d):
+    """G93.1 сам є ФО, але власну вимогу «ФО або СП» не закриває — ФО/СП у списку поля 1."""
     c = d.companion_candidates(d.find("G93.1"), 0, [])
-    assert all(x.cats & {"ПП", "Z"} for x in c)
-    assert "G81.9" not in codes(c) and "R26.2" not in codes(c)
+    assert "G81.9" in codes(c) and "R26.2" in codes(c)
 
 
-def test_all_self_covered_keeps_optional(d):
-    """G93.7 (ПП, ФО; формула «ФО»): обов'язковий лише Z (Z50.x), але ФО лишаються в списку як необов'язкові."""
+def test_main_formula_category_in_list(d):
+    """G93.7 (ПП, ФО; формула «ФО»): ФО обов'язковий серед супутніх, хоча основний сам ФО."""
     c = d.companion_candidates(d.find("G93.7"), 0, [])
     assert cats_of(c) >= {"ФО", "Z"}
 
 
 def test_slot2_only_unmet(d):
-    """A32.1 + G11: ФО закрито G11, формула G11 закрита ним самим → у полі 2 лише Z (Z50.x)."""
-    main, g11 = d.find("A32.1"), d.find("G11")
-    c = d.companion_candidates(main, 1, [g11])
+    """A32.1 + G81.9 (формула «ПП») + I46.0 (ПП): усе закрито, крім Z → у полі 3 лише Z."""
+    main, g81, i46 = d.find("A32.1"), d.find("G81.9"), d.find("I46.0")
+    c = d.companion_candidates(main, 2, [g81, i46])
     assert c and all("Z" in x.cats for x in c)
 
 
+def test_companion1_own_category_not_counted(d):
+    """A32.1 + G11 (ПП, ФО; формула «ПП або ФО або СП»): G11 сам себе не закриває → у полі 2 ПП/ФО/СП і Z."""
+    c = d.companion_candidates(d.find("A32.1"), 1, [d.find("G11")])
+    assert "R26.2" in codes(c) and "Z50.0" in codes(c)
+
+
 def test_slot3_after_all_met(d):
-    main, g11, z = d.find("A32.1"), d.find("G11"), d.find("Z50.0")
-    c3 = d.companion_candidates(main, 2, [g11, z])
-    assert "ФО" in cats_of(c3)                # у тестовому довіднику єдиний Z-код уже обрано
-    assert "Z50.0" not in codes(c3)          # уже обраний — виключений
+    main, g81, i46, z = d.find("A32.1"), d.find("G81.9"), d.find("I46.0"), d.find("Z50.0")
+    c4 = d.companion_candidates(main, 3, [g81, i46, z])
+    assert "ФО" in cats_of(c4) and "Z50.0" not in codes(c4)
 
 
 def test_slot_own_choice_stays_in_its_list(d):
-    main, g11, z = d.find("A32.1"), d.find("G11"), d.find("Z50.0")
-    assert "Z50.0" in codes(d.companion_candidates(main, 1, [g11, z]))
+    main, g81, i46, z = d.find("A32.1"), d.find("G81.9"), d.find("I46.0"), d.find("Z50.0")
+    assert "Z50.0" in codes(d.companion_candidates(main, 2, [g81, i46, z]))
 
 
 def test_slot2_uses_companion1_formula(d):
@@ -62,12 +66,6 @@ def test_slot2_uses_companion1_formula(d):
     main, g81 = d.find("A32.1"), d.find("G81.9")
     c = d.companion_candidates(main, 1, [g81])
     assert c and all(x.cats & {"ПП", "Z"} for x in c) and cats_of(c) >= {"ПП", "Z"}
-
-
-def test_slot2_after_companion1_formula_met(d):
-    """A32.1 + G11 (формулу закриває сам) → у полі 2 лише Z (Z50.x)."""
-    c = d.companion_candidates(d.find("A32.1"), 1, [d.find("G11")])
-    assert c and all("Z" in x.cats for x in c)
 
 
 def test_later_slots_ignore_companion2_formula(d):
@@ -93,7 +91,7 @@ def test_pair_of_previous_companion_in_next_list(d):
 
 
 def test_broad_list_contains_narrow(d):
-    main, g11 = d.find("A32.1"), d.find("G11")
-    narrow = codes(d.companion_candidates(main, 1, [g11]))
-    broad = codes(d.companion_candidates(main, 1, [g11], narrow=False))
+    main, g81, i46 = d.find("A32.1"), d.find("G81.9"), d.find("I46.0")
+    narrow = codes(d.companion_candidates(main, 2, [g81, i46]))
+    broad = codes(d.companion_candidates(main, 2, [g81, i46], narrow=False))
     assert narrow <= broad and len(broad) > len(narrow)

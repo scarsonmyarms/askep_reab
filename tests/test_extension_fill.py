@@ -115,3 +115,101 @@ def test_dynamic_id_not_required(page):
     """Поля знаходяться за підписом, навіть якщо id змінився."""
     page.evaluate("document.querySelectorAll('input[placeholder]').forEach((el, i) => el.id = 'input-' + (900 + i))")
     assert len(fill(page, [], dryRun=True)["fields"]) == 2
+
+
+# ------------------------------------------------------------------ вкладки та шкала Бартел
+def test_opens_diagnoses_tab_first(page):
+    """Сторінка відкрита на «Діагностичних звітах» — розширення спершу переходить на «Діагнози»."""
+    r = fill(page, [E("Основний", "I63.3")])
+    assert r["results"][0]["level"] == "✔"
+    assert page.evaluate("document.querySelector('[data-panel=p-diag]').getAttribute('aria-selected')") == "true"
+
+
+def test_barthel_flow(page):
+    r = fill(page, [E("Основний", "I63.3"), E("Супутній 1", "G81.9")], barthel=True)
+    steps = {x["role"]: (x["level"], x["text"]) for x in r["results"]}
+    assert steps["Діагностичний звіт"][0] == "✔" and "96037-00" in steps["Діагностичний звіт"][1]
+    assert steps["Спостереження: тип"] == ("✔", "вибрано: Загальні спостереження (LOINC)")
+    assert page.evaluate("document.getElementById('input-1261').getAttribute('aria-checked')") == "true"
+    assert steps["Спостереження: категорія"][0] == "✔"
+    assert steps["Спостереження: вид"][0] == "✔" and "Barthel_Extended" in steps["Спостереження: вид"][1]
+    assert steps["Спостереження: посилання"][0] == "✔"
+    assert "06.10.2026" in steps["Спостереження: посилання"][1]          # найновіший звіт 96037-00
+    sel = page.evaluate("[...document.querySelectorAll('#p-rep .v-select__selection, #p-obs .v-select__selection')].map(e => e.textContent)")
+    assert sel[0].startswith("96037-00") and sel[1] == "Шкали оцінки, опитування"
+    assert sel[2].startswith("Barthel_Extended") and sel[3].startswith("(96037-00)")
+    assert page.evaluate("document.querySelector('#p-rep .v-select__selection') !== null")
+    # виконавця (інше поле зі списком) не зачеплено
+    assert page.evaluate("document.querySelectorAll('#p-rep .v-select__selection').length") == 1
+
+
+def test_barthel_second_run_skips(page):
+    fill(page, [E("Основний", "I63.3")], barthel=True)
+    r = fill(page, [E("Основний", "I63.3")], barthel=True)
+    levels = {x["role"]: x["level"] for x in r["results"]}
+    assert levels["Діагностичний звіт"] == "ℹ" and levels["Спостереження: категорія"] == "ℹ"
+    assert levels["Спостереження: тип"] == "ℹ"
+    assert levels["Спостереження: вид"] == "ℹ" and levels["Спостереження: посилання"] == "ℹ"
+
+
+def test_barthel_off_by_default(page):
+    r = fill(page, [E("Основний", "I63.3")])
+    assert [x["role"] for x in r["results"]] == ["Основний"]
+
+
+def test_radio_missing(page):
+    """Немає перемикача «Загальні спостереження (LOINC)» — далі не йдемо, повідомляємо."""
+    page.evaluate("document.querySelector('label[for=input-1261]').textContent = 'Інша назва'")
+    r = fill(page, [E("Основний", "I63.3")], barthel=True)
+    last = r["results"][-1]
+    assert last["role"] == "Спостереження: тип" and last["level"] == "✖"
+
+
+def test_reference_found_by_heading(page):
+    """Посилання шукається лише в полі під заголовком «Посилання на діагностичний звіт»; інші поля не відкриваються."""
+    page.evaluate("""() => { window.__opened = []; document.addEventListener('click', e => {
+        const i = e.target.closest('.v-input'); if (i) window.__opened.push(i.parentElement.textContent.trim().slice(0, 40)); }, true); }""")
+    r = fill(page, [E("Основний", "I63.3")], barthel=True)
+    assert r["results"][-1]["level"] == "✔"
+    assert not any("Виконавець спостереження" in x for x in page.evaluate("window.__opened"))
+    assert page.evaluate("document.querySelector('.col-6 .v-select__selection').textContent").startswith("(96037-00)")
+
+
+def test_reference_heading_missing(page):
+    page.evaluate("""() => { const t = () => { const h = [...document.querySelectorAll('.v-subheader')]
+        .find(x => x.textContent.trim() === 'Посилання на діагностичний звіт');
+        if (h) h.textContent = 'Інший заголовок'; else setTimeout(t, 100); }; t(); }""")
+    r = fill(page, [E("Основний", "I63.3")], barthel=True)
+    assert r["results"][-1]["level"] == "✖" and "не знайдено" in r["results"][-1]["text"]
+
+
+# ------------------------------------------------------------------ «Заключення лікаря»
+TEXT = "Пацієнт після ішемічного інсульту, геміпарез справа. Рекомендовано продовжити реабілітацію."
+
+
+def test_conclusion_in_barthel_flow(page):
+    r = fill(page, [E("Основний", "I63.3")], barthel=True, conclusion=TEXT)
+    roles = [x["role"] for x in r["results"]]
+    assert roles.index("Заключення лікаря") == roles.index("Діагностичний звіт") + 1        # перед спостереженнями
+    assert roles.index("Заключення лікаря") < roles.index("Спостереження: тип")
+    assert page.evaluate("document.getElementById('input-1135').value") == TEXT
+    assert page.evaluate("document.querySelector('#p-rep .v-counter').textContent").startswith(str(len(TEXT)))
+
+
+def test_conclusion_without_barthel(page):
+    r = fill(page, [E("Основний", "I63.3")], conclusion=TEXT)
+    assert [x["role"] for x in r["results"]] == ["Основний", "Заключення лікаря"]
+    assert r["results"][-1]["level"] == "✔"
+
+
+def test_conclusion_not_overwritten(page):
+    page.evaluate("document.getElementById('input-1135').value = 'Текст, підтягнутий з ЕМК'")
+    r = fill(page, [E("Основний", "I63.3")], conclusion=TEXT)
+    assert r["results"][-1]["level"] == "⚠"
+    assert page.evaluate("document.getElementById('input-1135').value") == "Текст, підтягнутий з ЕМК"
+
+
+def test_conclusion_empty_reminder(page):
+    r = fill(page, [E("Основний", "I63.3")], barthel=True)
+    c = [x for x in r["results"] if x["role"] == "Заключення лікаря"][0]
+    assert c["level"] == "⚠" and "обов'язкове" in c["text"]

@@ -55,7 +55,7 @@ class TestZRequired:
         assert has(r.main_groups, FAIL, "Діагноз_Z") and r.summary.level == FAIL
 
     def test_z50_code_ok(self, d):
-        r = V(d, "A32.1", ["G11", "Z50.0"])
+        r = V(d, "A32.1", ["G81.9", "Z50.0", "I46.0"])
         assert has(r.main_groups, OK, "Діагноз_Z") and r.summary.level == OK
 
     def test_sfz_does_not_replace_z(self, d):
@@ -63,7 +63,7 @@ class TestZRequired:
         assert has(r.main_groups, FAIL, "Діагноз_Z")
 
     def test_sfz_is_optional_info(self, d):
-        r = V(d, "A32.1", ["G11", Z, "Z74.1"])
+        r = V(d, "A32.1", ["G81.9", Z, "Z74.1", "I46.0"])
         assert has(comp(r, 2), INFO, "СФЗ") and r.summary.level == OK
 
     def test_z_companion_fits_formula(self, d):
@@ -78,16 +78,21 @@ class TestMainFormula:
     def test_missing(self, d):
         assert has(V(d, "A32.1", [Z]).main_groups, FAIL, "бракує: Діагноз_ФО")
 
-    def test_self_covered_no_companion_needed(self, d):
-        """G93.7 має ФО → формула «плюс ФО» виконана самим діагнозом; потрібен лише СФЗ."""
-        r = V(d, "G93.7", [Z])
-        assert has(r.main_groups, OK, "виконано самим діагнозом") and r.summary.level == OK
+    def test_own_category_does_not_close_main_formula(self, d):
+        """G93.7 має ФО, але формулу «ФО» основного закриває лише супутній ФО (як у перевірці НСЗУ)."""
+        assert has(V(d, "G93.7", [Z]).main_groups, FAIL, "бракує: Діагноз_ФО")
+        assert V(d, "G93.7", ["R47", Z, "I46.0"]).summary.level == OK
 
     def test_g93_1(self, d):
-        """G93.1 (ФО): «ПП» + «ФО або СП» (закрито самим ФО) + СФЗ."""
-        r = V(d, "G93.1", ["I46.0", Z])
+        """G93.1 (ФО): «ПП» + «ФО або СП» + Z — кожну вимогу закриває інший діагноз."""
+        r = V(d, "G93.1", ["I46.0", "R26.2", Z])
         assert levels(r.main_groups) == [OK, OK, OK]
-        assert has(r.main_groups, OK, "самим діагнозом (ФО)")
+
+    def test_own_category_does_not_cover_own_formula(self, d):
+        """Як у розшифровці НСЗУ («G09 сам собі не рахується»): ФО самого G93.1 не закриває його вимогу «ФО або СП»."""
+        r = V(d, "G93.1", ["I46.0", Z])
+        assert has(r.main_groups, FAIL, "бракує: Діагноз_ФО або Діагноз_СП")
+        assert not any("самим діагнозом" in l.text for l in r.all_lines())
 
     def test_g93_1_missing_pp(self, d):
         assert has(V(d, "G93.1", ["R26.2", Z]).main_groups, FAIL, "бракує: Діагноз_ПП")
@@ -132,10 +137,11 @@ class TestCompanions:
 
 
 class TestCompanion1Formula:
-    def test_own_formula_self_covered(self, d):
-        """G11 («ПП або ФО або СП») закриває свою формулу сам."""
+    def test_own_formula_not_closed_by_itself(self, d):
+        """G11 («ПП або ФО або СП») сам є ПП і ФО, але власну формулу не закриває (розшифровка НСЗУ, рядок 70)."""
         r = V(d, "A32.1", ["G11", Z])
-        assert has(comp(r, 0), OK, "самим діагнозом") and r.summary.level == OK
+        assert has(comp(r, 0), FAIL, "Його група 1: бракує") and r.summary.level == FAIL
+        assert V(d, "A32.1", ["G11", Z, "R26.2"]).summary.level == OK
 
     def test_main_not_counted(self, d):
         """Умови супутнього 1 основний не закриває: G81.9 вимагає ПП, основний A32.1 (ПП) не враховується."""
@@ -153,7 +159,7 @@ class TestCompanion1Formula:
         assert has(comp(r, 0), FAIL, "Його група 1: бракує: Діагноз_ПП")
 
     def test_companion2_formula_not_applied(self, d):
-        r = V(d, "A32.1", ["G11", "Z74.1", Z])          # Z74.1 у полі 2 вимагає ПП — не перевіряється
+        r = V(d, "A32.1", ["G81.9", "Z74.1", Z, "I46.0"])  # Z74.1 у полі 2 вимагає ПП — не перевіряється
         assert not any("Його група" in l.text for l in comp(r, 1))
         assert r.summary.level == OK
 

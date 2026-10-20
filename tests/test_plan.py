@@ -25,11 +25,11 @@ def test_main_formula_slots_and_sfz(d):
     assert all("Z" in x.cats for x in slot_candidates(d, d.find("A32.1"), sl, 1))
 
 
-def test_self_covered_groups_have_no_slot(d):
-    """G93.1 (ФО): «ПП» + «ФО або СП» (закриває сам) + Z → поля лише для ПП і Z."""
+def test_own_category_does_not_remove_slot(d):
+    """G93.1 (ФО): «ПП» + «ФО або СП» + Z — поле для кожної вимоги, хоча основний сам ФО."""
     sl = plan(d, "G93.1")
     assert [s.label.split(": ", 1)[1] for s in sl if s.role == "main"] == \
-        ["Діагноз_ПП", "Діагноз_Z (обов'язковий у кожному випадку)"]
+        ["Діагноз_ПП", "Діагноз_ФО або Діагноз_СП", "Діагноз_Z (обов'язковий у кожному випадку)"]
 
 
 def test_pair_slot_for_main(d):
@@ -52,8 +52,14 @@ def test_comp1_slot(d):
     assert "G81.9" in sl[2].label and "Діагноз_ПП" in sl[2].label
 
 
-def test_comp1_slot_not_needed_when_self_covered(d):
+def test_comp1_slot_for_own_category(d):
+    """G11 (ПП, ФО) у полі 1 сам себе не закриває — з'являється поле за його формулою."""
     sl = plan(d, "A32.1", m0="G11", m1="Z50.0")
+    assert "comp1" in [s.role for s in sl]
+
+
+def test_comp1_slot_not_needed_when_other_companion_covers(d):
+    sl = plan(d, "A32.1", m0="G81.9", m1="Z50.0", f0="I46.0")
     assert "comp1" not in [s.role for s in sl]
 
 

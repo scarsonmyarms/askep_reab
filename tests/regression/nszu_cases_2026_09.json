@@ -1,0 +1,1097 @@
+{
+ "source": "Розшифровка НСЗУ «Реабілітація», вересень 2026, пакет 53 (стаціонарна реабілітація)",
+ "note": "Знеособлено: лише коди діагнозів і вердикт НСЗУ. Без імен, ID ЕМЗ/епізодів, коду пацієнта, віку, статі, дат. source_row — номер рядка у файлі розшифровки (для звірки). Порядок додаткових діагнозів — як у розшифровці.",
+ "cases": [
+  {
+   "case": 1,
+   "source_row": 45,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M24.55",
+   "additional": [
+    "M25.55",
+    "R26.8",
+    "Z50.1",
+    "M16.7",
+    "Z50.9"
+   ]
+  },
+  {
+   "case": 2,
+   "source_row": 46,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 3,
+   "source_row": 47,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "S72.03",
+   "additional": [
+    "Z54.0",
+    "Z50.9",
+    "M24.55",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 4,
+   "source_row": 48,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 5,
+   "source_row": 49,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "G81.1",
+   "additional": [
+    "Z50.9",
+    "R47.1",
+    "I69.3"
+   ]
+  },
+  {
+   "case": 6,
+   "source_row": 50,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 7,
+   "source_row": 51,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R47.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 8,
+   "source_row": 52,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "G81.1",
+   "additional": [
+    "Z50.9",
+    "I69.3"
+   ]
+  },
+  {
+   "case": 9,
+   "source_row": 53,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "G55.1",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.8",
+    "G82.30",
+    "M51.1"
+   ]
+  },
+  {
+   "case": 10,
+   "source_row": 54,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 11,
+   "source_row": 55,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "H53.2",
+    "Z54.8",
+    "Z50.9",
+    "R26.0",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 12,
+   "source_row": 56,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "T06.8",
+   "additional": [
+    "Y96",
+    "Y36.2",
+    "Z54.0",
+    "Z50.9",
+    "M24.54",
+    "S68.2",
+    "T02.21"
+   ]
+  },
+  {
+   "case": 13,
+   "source_row": 57,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "D33.0",
+   "additional": [
+    "Z54.0",
+    "Z50.9",
+    "R26.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 14,
+   "source_row": 58,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "R26.8",
+    "Z50.1",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 15,
+   "source_row": 59,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "G04.8",
+   "additional": [
+    "N18.1",
+    "Z54.8",
+    "Z50.9",
+    "R26.8",
+    "G82.00"
+   ]
+  },
+  {
+   "case": 16,
+   "source_row": 60,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R26.8",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 17,
+   "source_row": 61,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z50.5",
+    "R47.1",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 18,
+   "source_row": 62,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "G55.1",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "Z50.1",
+    "M54.5",
+    "M54.16",
+    "R26.8",
+    "G82.06",
+    "M51.1"
+   ]
+  },
+  {
+   "case": 19,
+   "source_row": 63,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 20,
+   "source_row": 64,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 21,
+   "source_row": 65,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "G55.1",
+   "additional": [
+    "Z54.0",
+    "Z50.9",
+    "R26.8",
+    "M54.5",
+    "M21.37",
+    "G83.1",
+    "M51.0"
+   ]
+  },
+  {
+   "case": 22,
+   "source_row": 66,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 23,
+   "source_row": 67,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M24.56",
+   "additional": [
+    "Z54.8",
+    "Z50.1",
+    "Z50.9",
+    "R26.8",
+    "M25.56",
+    "M17.4"
+   ]
+  },
+  {
+   "case": 24,
+   "source_row": 68,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z50.1",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 25,
+   "source_row": 69,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z50.5",
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 26,
+   "source_row": 70,
+   "nszu_accepted": false,
+   "package": null,
+   "service": null,
+   "nszu_diagnosis_errors": [
+    "Для діагнозу G09 не виконано вимогу: відсутній діагноз типу ПП."
+   ],
+   "main": "G82.02",
+   "additional": [
+    "Z50.1",
+    "Z50.9",
+    "R27.0",
+    "R26.8",
+    "G09"
+   ]
+  },
+  {
+   "case": 27,
+   "source_row": 71,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I61.1",
+   "additional": [
+    "Z50.5",
+    "Z50.9",
+    "Z50.1",
+    "Z54.8",
+    "R47.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 28,
+   "source_row": 72,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I60.7",
+   "additional": [
+    "I11.9",
+    "E66.93",
+    "Z54.0",
+    "Z50.1",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 29,
+   "source_row": 73,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I61.1",
+   "additional": [
+    "R31",
+    "E10.69",
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 30,
+   "source_row": 74,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.1",
+    "Z50.9",
+    "Z50.5",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 31,
+   "source_row": 75,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R27.8",
+    "R47.0"
+   ]
+  },
+  {
+   "case": 32,
+   "source_row": 76,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "S72.11",
+   "additional": [
+    "J20.9",
+    "D63",
+    "I27.2",
+    "I36.1",
+    "I42.8",
+    "Z50.1",
+    "Z50.9",
+    "Z54.0",
+    "M25.55",
+    "M24.55",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 33,
+   "source_row": 77,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R26.8",
+    "R47.0"
+   ]
+  },
+  {
+   "case": 34,
+   "source_row": 78,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "S72.11",
+   "additional": [
+    "Z54.0",
+    "Z50.1",
+    "Z50.9",
+    "R26.8",
+    "M25.55",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 35,
+   "source_row": 79,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "G55.1",
+   "additional": [
+    "Z54.0",
+    "Z50.9",
+    "R26.8",
+    "M54.16",
+    "M54.5",
+    "M21.37",
+    "G83.1",
+    "M51.1"
+   ]
+  },
+  {
+   "case": 36,
+   "source_row": 80,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "G55.1",
+   "additional": [
+    "Z54.0",
+    "Z50.5",
+    "R26.8",
+    "M54.16",
+    "M54.5",
+    "G83.1",
+    "M51.1"
+   ]
+  },
+  {
+   "case": 37,
+   "source_row": 81,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "N17.9",
+    "R31",
+    "Z54.8",
+    "Z50.9",
+    "R47.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 38,
+   "source_row": 82,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "E11.65",
+    "Z54.8",
+    "Z50.9",
+    "Z50.1",
+    "Z50.5",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 39,
+   "source_row": 83,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "G55.1",
+   "additional": [
+    "Z54.8",
+    "Z50.1",
+    "Z50.9",
+    "R26.8",
+    "M54.5",
+    "M54.16",
+    "G83.1",
+    "M51.1"
+   ]
+  },
+  {
+   "case": 40,
+   "source_row": 84,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "R26.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 41,
+   "source_row": 85,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M17.3",
+   "additional": [
+    "G57.9",
+    "G55.1",
+    "Z54.0",
+    "Z50.9",
+    "M25.56",
+    "R26.8",
+    "M24.56"
+   ]
+  },
+  {
+   "case": 42,
+   "source_row": 86,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 43,
+   "source_row": 87,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "S72.05",
+   "additional": [
+    "E09.9",
+    "E06.3",
+    "Z54.0",
+    "Z96.64",
+    "Z50.9",
+    "R26.8",
+    "M25.55",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 44,
+   "source_row": 88,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "S72.04",
+   "additional": [
+    "N10",
+    "N40",
+    "Z54.0",
+    "Z96.64",
+    "Z50.9",
+    "R26.8",
+    "M24.55",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 45,
+   "source_row": 90,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M16.0",
+   "additional": [
+    "Z96.64",
+    "R26.8",
+    "Z50.9",
+    "Z54.0",
+    "M24.55"
+   ]
+  },
+  {
+   "case": 46,
+   "source_row": 91,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "R47.1",
+    "Z50.5",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 47,
+   "source_row": 92,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "E11.69",
+    "R47.1",
+    "Z50.5",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 48,
+   "source_row": 93,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "D32.1",
+   "additional": [
+    "Z54.0",
+    "Z50.1",
+    "Z50.9",
+    "R26.8",
+    "G82.00"
+   ]
+  },
+  {
+   "case": 49,
+   "source_row": 94,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "R47.1",
+    "Z50.5",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 50,
+   "source_row": 95,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "S72.03",
+   "additional": [
+    "Z96.64",
+    "Z50.9",
+    "R26.8",
+    "Z54.0",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 51,
+   "source_row": 96,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "G81.1",
+   "additional": [
+    "Z50.9",
+    "Z50.5",
+    "R26.8",
+    "R47.1",
+    "I69.3"
+   ]
+  },
+  {
+   "case": 52,
+   "source_row": 97,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "R47.1",
+    "Z50.5",
+    "Z50.9",
+    "Z54.8",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 53,
+   "source_row": 98,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "E09.9",
+    "L30.3",
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 54,
+   "source_row": 99,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M17.3",
+   "additional": [
+    "Z54.0",
+    "Z50.1",
+    "M25.56",
+    "M24.56",
+    "R26.8"
+   ]
+  },
+  {
+   "case": 55,
+   "source_row": 100,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M24.55",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.8",
+    "M25.55",
+    "M16.6"
+   ]
+  },
+  {
+   "case": 56,
+   "source_row": 101,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M24.57",
+   "additional": [
+    "D63",
+    "Z54.8",
+    "Z50.9",
+    "R26.8",
+    "M25.57",
+    "S99.8",
+    "G83.1"
+   ]
+  },
+  {
+   "case": 57,
+   "source_row": 102,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "M24.56",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.8",
+    "M25.56",
+    "M17.0"
+   ]
+  },
+  {
+   "case": 58,
+   "source_row": 103,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I61.1",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R47.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 59,
+   "source_row": 104,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z50.9",
+    "Z50.5",
+    "R27.8",
+    "R26.8",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 60,
+   "source_row": 105,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "I48.0",
+    "I25.0",
+    "I11.9",
+    "Z54.8",
+    "Z50.9",
+    "Z50.5",
+    "R27.8",
+    "R47.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 61,
+   "source_row": 106,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "G81.1",
+   "additional": [
+    "Z50.5",
+    "Z50.9",
+    "R47.1",
+    "I69.3"
+   ]
+  },
+  {
+   "case": 62,
+   "source_row": 107,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP3",
+   "nszu_diagnosis_errors": [],
+   "main": "G81.1",
+   "additional": [
+    "Z50.9",
+    "Z50.5",
+    "R47.1",
+    "I69.3"
+   ]
+  },
+  {
+   "case": 63,
+   "source_row": 108,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.4",
+   "additional": [
+    "Z50.5",
+    "Z50.8",
+    "Z50.9",
+    "R47.0",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 64,
+   "source_row": 109,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z50.9",
+    "Z54.8",
+    "Z50.1",
+    "Z50.5",
+    "R47.1",
+    "G81.1"
+   ]
+  },
+  {
+   "case": 65,
+   "source_row": 110,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP4",
+   "nszu_diagnosis_errors": [],
+   "main": "I21.4",
+   "additional": [
+    "E11.9",
+    "Z54.0",
+    "Z50.0",
+    "Z95.5"
+   ]
+  },
+  {
+   "case": 66,
+   "source_row": 111,
+   "nszu_accepted": true,
+   "package": "53",
+   "service": "CP2",
+   "nszu_diagnosis_errors": [],
+   "main": "I63.3",
+   "additional": [
+    "Z54.8",
+    "Z50.9",
+    "R26.8",
+    "R27.0",
+    "G81.1"
+   ]
+  }
+ ]
+}

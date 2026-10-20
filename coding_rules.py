@@ -11,18 +11,16 @@
   * формула (O) застосовується лише до основного діагнозу та супутнього 1;
   * список супутнього 1 — за формулою основного; списки супутніх 2..N — за формулами основного
     та супутнього 1 (плюс парні коди †/* уже обраних супутніх);
-  * у список потрапляють лише категорії ще не закритих вимог (групи, закриті категорією самого
-    діагнозу або вже обраними діагнозами, не враховуються); коли все закрито — показуються всі
-    категорії формул, які діагнози не закривають самі;
-  * умови формули супутнього 1 закриваються лише ним самим (своєю категорією) та іншими супутніми —
-    основний діагноз не враховується;
+  * у список потрапляють лише категорії ще не закритих вимог (групи, вже закриті іншими обраними
+    діагнозами, не враховуються); коли все закрито — показуються всі категорії формул;
+  * умови формули супутнього 1 закриваються лише іншими супутніми — основний діагноз не враховується;
   * кожне «плюс» — окрема обов'язкова група; «та/або» і «або» — достатньо одного з варіантів
     (так формули записано в нових файлах НСЗУ: «Діагноз_ПП AND (Діагноз_ФО OR Діагноз_С)»);
   * у переліках кодів «та» — окрема обов'язкова група (напр., T92.3: S43/S53/S63 і T11.2);
   * у кожному випадку обов'язковий код «Діагноз_Z» (Z50.x); СФЗ — окрема необов'язкова категорія;
   * категорії кодів — з файлу НСЗУ «Перелік діагнозів ПП, ФО, С, СП, Z» (якщо є поруч із довідником);
-  * група вважається виконаною самим діагнозом, якщо він має відповідну категорію (I–M)
-    (напр., G93.7 з категоріями ПП, ФО і формулою «плюс ФО» додаткових діагнозів не потребує).
+  * діагноз НЕ закриває власну формулу своєю категорією: вимогу має закрити інший діагноз
+    (розшифровка НСЗУ: «Для діагнозу G09 не виконано вимогу: відсутній діагноз типу ПП» — хоча G09 сам є ПП).
 
 Запуск з командного рядка (без графічного інтерфейсу):
   python coding_rules.py довідник.xlsx --period post --main I63.3 --comp G81.9 --comp R47
@@ -491,8 +489,7 @@ class Directory:
                          narrow: bool = True) -> list[str]:
         """
         Токени для поля slot.
-          * Групи, які власник формули закриває сам (своєю категорією), не враховуються;
-            якщо сам діагноз закриває всі свої групи — вони лишаються як необов'язкові варіанти.
+          * Діагноз не закриває власну формулу своєю категорією (так перевіряє НСЗУ: «G09 сам собі не рахується»).
           * Обов'язкова група випадку (Діагноз_Z) додається завжди.
           * narrow=True (для випадаючого списку): лише групи, ще не закриті іншими обраними
             діагнозами; якщо все закрито — усі групи з попереднього пункту.
@@ -500,8 +497,7 @@ class Directory:
         Парні коди †/* основного та попередніх супутніх додаються завжди.
         """
         formula = self._formula_groups(main, slot, selected)
-        own = [(o, g) for o, g in formula if not o.matches(g.ts)] or formula
-        own = own + [(main, g) for g in CASE_GROUPS]
+        own = formula + [(main, g) for g in CASE_GROUPS]       # діагноз не закриває власну формулу
         use = own
         if narrow:
             others = [main] + [d for j, d in enumerate(selected) if j != slot and d is not None]
@@ -550,10 +546,10 @@ MAX_SLOTS = 12
 def plan_slots(directory: Directory, main: Diagnosis | None, values: dict[str, str]) -> list[Slot]:
     """
     Порядок полів:
-      1) за формулою основного — по полю на кожну вимогу, яку основний не закриває сам (зокрема Діагноз_Z);
+      1) за формулою основного — по полю на кожну вимогу формули (зокрема Діагноз_Z);
       2) пари †/* — для основного й діагнозів із полів 1), якщо пару ще не вказано;
       3) за формулою супутнього 1 (перше поле) — по полю на кожну вимогу, яку не закривають
-         він сам і інші вже обрані супутні (основний не враховується);
+         інші вже обрані супутні (ні він сам, ні основний не враховуються);
       4) пари †/* для діагнозів із полів 3);
       5) необов'язкові поля (завжди одне порожнє в кінці).
     values — значення полів за ключами (ключі стабільні: m0, m1, p:main, p:m0, c0, p:c0, f0 …).
@@ -567,8 +563,7 @@ def plan_slots(directory: Directory, main: Diagnosis | None, values: dict[str, s
         return Slot(key, role, label, tokens, v, d)
 
     slots: list[Slot] = []
-    groups = [g for g in main.groups if not main.matches(g.ts)]
-    groups += [g for g in CASE_GROUPS if not main.matches(g.ts)]
+    groups = list(main.groups) + list(CASE_GROUPS)        # діагноз не закриває власну формулу
     for i, g in enumerate(groups):
         slots.append(mk(f"m{i}", "main", f"{ROLE_TITLES['main']}: {g.text}", list(g.tokens)))
     main_slots = list(slots)
@@ -607,7 +602,7 @@ def plan_slots(directory: Directory, main: Diagnosis | None, values: dict[str, s
     if c1 is not None:
         pool = [s.diag for s in slots if s.diag and s.key != "m0"] + free_diags     # без основного
         for k, g in enumerate(c1.cgroups):
-            covered = c1.matches(g.ts) or any(x.matches(g.ts) for x in pool) or will_cover(g)
+            covered = any(x.matches(g.ts) for x in pool) or will_cover(g)
             if covered and not _clean(values.get(f"c{k}", "")):
                 continue
             s = mk(f"c{k}", "comp1", f"{ROLE_TITLES['comp1']} ({c1.code}): {g.text}", list(g.tokens))
@@ -662,6 +657,7 @@ class Report:
     exclusions: list[Line] = field(default_factory=list)
     summary: Line = field(default_factory=lambda: Line(INFO, ""))
     services: list[Line] = field(default_factory=list)      # лише для амбулаторії
+    advice: list[dict] = field(default_factory=list)        # поради щодо вибору основного (з можливою заміною)
 
     def all_lines(self) -> list[Line]:
         out = self.main + self.main_groups + self.exclusions
@@ -688,9 +684,7 @@ def _group_met(g: Group, others: list[Diagnosis]) -> bool:
 
 
 def _group_line(g: Group, met: bool, st_required: bool, prefix: str = "", self_d: Diagnosis | None = None) -> Line:
-    if self_d is not None and self_d.matches(g.ts):
-        own = ", ".join(c for c in CATS if c in self_d.cats and c in g.tokens) or self_d.code
-        return Line(OK, f"{prefix}{g.text} — виконано самим діагнозом ({own}), додатковий не потрібен")
+    # self_d лишено для сумісності викликів: діагноз НЕ закриває власну формулу (так перевіряє НСЗУ)
     if met:
         return Line(OK, f"{prefix}{g.text} — виконано")
     if g.kind == "code" and not st_required:
@@ -708,6 +702,77 @@ def _pair_line(d: Diagnosis, others: list[Diagnosis]) -> Line | None:
     if d.pair_flag == 1:
         return Line(FAIL, f"Додайте парний код †/*: {d.pair_text}")
     return Line(WARN, f"Рекомендовано парний код: {d.pair_text}")
+
+
+# ----------------------------------------------------------------------------------------
+# Вибір основного діагнозу (розділ ІІ Правил): поради-попередження ⚠, нічого не блокують
+# ----------------------------------------------------------------------------------------
+# Гостра етіологія, яку в післягострому періоді зазначають основною (CR_1_1, CR_2_5, CR_4_6, CR_8_1, CR_8_9)
+ACUTE_ETIOLOGY = tuple([f"I{n}" for n in range(60, 65)] + ["S"])
+# Коди ізольованого болю (розділ ІІ; CR_3_6; група 7)
+PAIN_CODES = ("M54.2", "M54.4", "M54.5", "M54.6", "M54.8", "M54.9", "M25.5", "M79.1", "M79.2", "M79.6",
+              "R51", "R52", "R07", "R10", "G44")
+
+
+def is_pain(code: str) -> bool:
+    return code.startswith(PAIN_CODES)
+
+
+def main_advice(period: str, main: Diagnosis, comps: list[Diagnosis]) -> list[dict]:
+    """
+    1) «Причину встановлено»: основний — ФО/СП без ПП, серед супутніх — гостра етіологія (I60–I64, S…).
+       Післягострий період — ⚠ і пропозиція заміни; довготривалий — лише підказка ℹ (CR_1_2, CR_2_6, CR_4_7).
+    2) «Біль при структурній патології»: основний — код болю, серед супутніх — ПП класу M (не біль) або S/T.
+    Кандидат на заміну — лише діагноз, який може бути основним у цьому періоді.
+    """
+    out: list[dict] = []
+    known = [c for c in comps if c is not None and c.source != "введено"]
+
+    def swap_for(cands):
+        return next((c for c in cands if c.main_in_period(period)), None)
+
+    if is_pain(main.code):
+        struct = [c for c in known if "ПП" in c.cats and not is_pain(c.code) and c.code[:1] in ("M", "S", "T")]
+        if struct:
+            s = swap_for(struct)
+            out.append({"kind": "pain", "level": WARN, "swap": s.name if s else None, "swap_code": s.code if s else None,
+                        "title": "Біль основним при встановленій структурній патології",
+                        "text": f"Серед супутніх є {struct[0].code} — структурна причина болю. Код ізольованого болю "
+                                f"основним допускається лише без встановленої причини (розділ ІІ Правил, CR_3_6). "
+                                f"Якщо реабілітація спрямована саме на хронічний больовий синдром (група 7) — залиште як є."})
+        return out
+    if "ПП" not in main.cats and main.cats & {"ФО", "СП"}:
+        acute = [c for c in known if "ПП" in c.cats and c.code.startswith(ACUTE_ETIOLOGY)]
+        if acute:
+            long = period == PERIOD_LONG
+            s = None if long else swap_for(acute)
+            out.append({"kind": "etiology", "level": INFO if long else WARN, "swap": s.name if s else None,
+                        "swap_code": s.code if s else None,
+                        "title": "Причину встановлено — основним, як правило, має бути етіологія",
+                        "text": (f"Основний {main.code} описує функціональне обмеження, а його причина {acute[0].code} "
+                                 f"вказана серед супутніх. " +
+                                 ("У довготривалому періоді основним допускається стійке функціональне обмеження "
+                                  "(CR_1_2, CR_2_6, CR_4_7)." if long else
+                                  "У післягострому періоді основним зазначають першопричину (CR_1_1, CR_2_5, CR_4_6, CR_8_1). "
+                                  "Якщо реабілітація спрямована саме на це обмеження — залиште як є."))})
+    return out
+
+
+def swap_main(directory: "Directory", main_text: str, values: dict[str, str], cand_text: str) -> tuple[str, dict[str, str]]:
+    """Зробити супутній cand основним: прибрати його з полів, а колишній основний поставити в перше
+    порожнє поле нового плану, роль якого він виконує (інакше — у необов'язкове)."""
+    main, cand = directory.find(main_text), directory.find(cand_text)
+    if main is None or cand is None:
+        return main_text, dict(values)
+    vals = {k: v for k, v in values.items() if _clean(v) and directory.find(v) is not cand}
+    slots = plan_slots(directory, cand, vals)
+    for s in slots:
+        if not _clean(s.value) and s.role != "free" and s.tokens is not None and main.matches(TokenSet(s.tokens)):
+            vals[s.key] = main.name
+            return cand.name, vals
+    free = next((s.key for s in slots if s.role == "free" and not _clean(s.value)), "f0")
+    vals[free] = main.name
+    return cand.name, vals
 
 
 # ----------------------------------------------------------------------------------------
@@ -856,6 +921,10 @@ def validate(directory: Directory, period: str, main_text: str, companion_texts:
 
     # --- підсумок
     levels = [l.level for l in rep.all_lines()]
+    rep.advice = main_advice(period, main, known)
+    for a in rep.advice:
+        rep.main.append(Line(a["level"], f"{a['title']}: {a['text']}"))
+
     if setting == SETTING_OUTPATIENT and directory.ambulatory:
         rep.services = ambulatory_lines(directory.ambulatory, main, known, sr_record)
 
